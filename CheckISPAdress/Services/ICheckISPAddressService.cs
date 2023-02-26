@@ -1,4 +1,4 @@
 ﻿public interface ICheckISPAddressService
 {
-    Task StartAsync(CancellationToken cancellationToken);
+    Task CheckISPAddressAsync(CancellationToken cancellationToken);
 }

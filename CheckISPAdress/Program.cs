@@ -33,7 +33,7 @@ if (serviceProvider != null)
     ICheckISPAddressService? checkISPAddressService = serviceProvider?.GetService<ICheckISPAddressService>();
 
     CancellationToken cts = new CancellationToken();
-    checkISPAddressService?.StartAsync(cts);
+    checkISPAddressService?.CheckISPAddressAsync(cts);
 }
 
 if (builder is not null)
