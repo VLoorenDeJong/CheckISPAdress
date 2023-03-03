@@ -73,8 +73,15 @@ namespace CheckISPAdress.Services
                     message.Body = emailBody;
                     message.IsBodyHtml = true;
 
-                    // Send the email message
-                    client.Send(message);
+                    try
+                    {
+                        // Send the email message
+                        client.Send(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError("Something went wrong with sending the email. Message:{message}", ex.Message);
+                    }
 
                 }
 
@@ -86,7 +93,7 @@ namespace CheckISPAdress.Services
             string hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderName!;
             if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase)) hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
 
-            string emailBody =   "<html>"
+            string emailBody = "<html>"
                                      + "<head>"
                                         + "<style>"
                                              + "h1, h3, h4, h5, p { font-family: Segoe UI; }"
