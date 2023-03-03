@@ -16,7 +16,7 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(_applicationSettingsOptions?.MailServer, StandardAppsettingsValues.MailServer, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
-                string errorMessage = "appsettings: MailServer not configured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: MailServer in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -25,7 +25,7 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(_applicationSettingsOptions?.UserName, StandardAppsettingsValues.UserName, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
-                string errorMessage = "appsettings: UserName not configured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: UserName in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
 
                 ThrowEmailConfigError(errorMessage, logger);
@@ -35,7 +35,7 @@ namespace CheckISPAdress.Helpers
             if (!_applicationSettingsOptions!.UseDefaultCredentials && string.Equals(_applicationSettingsOptions?.Password, StandardAppsettingsValues.Password, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
-                string errorMessage = "appsettings: Password not configured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: Password in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -44,7 +44,7 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(_applicationSettingsOptions?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
-                string errorMessage = "EmailToAdress not configured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: EmailToAdress in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -53,7 +53,7 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(_applicationSettingsOptions?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
-                string errorMessage = "appsettings:EmailFromAdress not confugured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: EmailFromAdress in appsettings not confugured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -69,7 +69,7 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(applicationSettingsOptions?.APIEndpointURL, StandardAppsettingsValues.APIEndpointURL, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
-                string errorMessage = "The APIEndpointURL is not changed, change the endpoint! (The endpoint of this API is: https://yourAPIURL//HTTP/GetIp)";
+                string errorMessage = "appsettings: The APIEndpointURL in appsettings is not changed, change the endpoint! (The endpoint of this API is: https://yourAPIURL//HTTP/GetIp) <br />";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessages.Add(errorMessage);
@@ -80,7 +80,7 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = "DNSRecordProviderURL in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: DNSRecordProviderURL in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed. <br />";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessages.Add(errorMessage);
@@ -90,7 +90,7 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = "EmailSubject in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = "appsettings: EmailSubject in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed. <br />";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessages.Add(errorMessage);

@@ -9,6 +9,7 @@
         public string? EmailToAdress { get; set; }
         public string? EmailFromAdress { get; set; }
         public string? EmailSubject { get; set; }
+        public string? DateTimeFormat { get; set; }
         public string? MailServer { get; set; }
         public int SMTPPort { get; set; }
         public bool UseDefaultCredentials { get; set; }

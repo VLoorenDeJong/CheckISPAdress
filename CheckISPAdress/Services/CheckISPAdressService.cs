@@ -2,14 +2,7 @@
 using CheckISPAdress.Interfaces;
 using CheckISPAdress.Models;
 using CheckISPAdress.Options;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using Microsoft.Win32;
-using System.Diagnostics.Metrics;
-using System.Net;
-using System.Net.Mail;
-using System.Security.Cryptography.Xml;
-using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
 public class CheckISPAddressService : ICheckISPAddressService
 {
@@ -44,11 +37,10 @@ public class CheckISPAddressService : ICheckISPAddressService
     {
         _logger.LogInformation("CheckISPAddress Service running.");
 
-        interval = (_applicationSettingsOptions?.TimeIntervalInMinutes * 60) ?? 60;
+        interval = (_applicationSettingsOptions.TimeIntervalInMinutes == 0)? 60 : _applicationSettingsOptions.TimeIntervalInMinutes;
 
-        emailTimer = new Timer(async (state) => await GetISPAddressAsync(state!), null, TimeSpan.Zero, TimeSpan.FromSeconds(interval));       
-        checkCounterTimer = new Timer(state => {checkCounter++;}, null, TimeSpan.FromSeconds(interval), TimeSpan.FromSeconds(interval));
-      
+        emailTimer = new Timer(async (state) => await GetISPAddressAsync(state!), null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));       
+        checkCounterTimer = new Timer(state => {checkCounter++;}, null, TimeSpan.FromMinutes(interval), TimeSpan.FromMinutes(interval));
 
         return Task.CompletedTask;
     }
@@ -57,7 +49,6 @@ public class CheckISPAddressService : ICheckISPAddressService
     {
         using (var client = new HttpClient())
         {
-
             try
             {
                 requestCounter++;
@@ -83,7 +74,6 @@ public class CheckISPAddressService : ICheckISPAddressService
                 _emailService.SendEmail(emailBody);
 
             }
-
         }
     }
 }

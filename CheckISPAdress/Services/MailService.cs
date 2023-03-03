@@ -3,10 +3,9 @@ using CheckISPAdress.Interfaces;
 using CheckISPAdress.Models;
 using CheckISPAdress.Options;
 using Microsoft.Extensions.Options;
-using System.Drawing;
 using System.Net;
 using System.Net.Mail;
-using System.Threading.Tasks;
+using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
 namespace CheckISPAdress.Services
 {
@@ -84,22 +83,30 @@ namespace CheckISPAdress.Services
 
         public string ISPAddressChangedEmail(string newISPAddress, string oldISPAddress, double interval, int requestCounter, int checkCounter)
         {
+            string hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderName!;
+            if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase)) hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
 
-            string something = "<html>"
+            string emailBody =   "<html>"
                                      + "<head>"
                                         + "<style>"
-                                             + "h1, p { font-family: Segoe UI; }"
+                                             + "h1, h3, h4, h5, p { font-family: Segoe UI; }"
                                              + "p { color: #666; }"
                                          + "</style>"
                                      + "</head>"
                                      + "<body>"
-                                         + $"<h1>Your isp adress is changed to {newISPAddress}</h1>"
-                                         + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}' > {_applicationSettingsOptions.DNSRecordHostProviderName?? _applicationSettingsOptions.DNSRecordHostProviderURL} </a> To update the address.</p></p>"
+                                         + $@"<p><strong> {newISPAddress} </strong> is your new ISP adress </p>"
+                                         + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
+                                         + $"<p>I wish you a splendid rest of your day!</p>"
+                                         + $"<p>Your API</p>"
+                                         + $"<p><strong>Here are some statistics:</strong></p>"
+                                         + $"<p>A call is made every <strong> {interval} </strong>minutes<p>"
+                                         + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions.DateTimeFormat)} </strong><p>"
+                                         + $"<p>API Calls: <strong> {requestCounter} </strong><p>"
+                                         + $"<p>Script runs: <strong> {checkCounter} </strong><p>"
                                      + "</body>"
                                  + "</html>";
 
-
-            return something;
+            return emailBody;
         }
     }
 }
