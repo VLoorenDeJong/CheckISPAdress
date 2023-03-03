@@ -1,4 +1,5 @@
 ﻿using CheckISPAdress.Helpers;
+using CheckISPAdress.Interfaces;
 using CheckISPAdress.Models;
 using CheckISPAdress.Options;
 using Microsoft.Extensions.Options;
@@ -81,31 +82,21 @@ namespace CheckISPAdress.Services
             }
         }
 
-        public string ISPAddressChangedEmail(string newISPAddress, string oldISPAddress, string? dNSRecordHostingProviderURL, double interval, int requestCounter, int checkCounter)
+        public string ISPAddressChangedEmail(string newISPAddress, string oldISPAddress, double interval, int requestCounter, int checkCounter)
         {
 
-           string something =     "<html>" 
-                                    +"<head>"
-                                       + "<style>"
-                                            + "h1, p { font-family: Segoe UI; }"
-                                            + "p { color: #666; }"
-                                        + "</style>"
-                                    + "</head>" 
-                                    +"<body>"
-                                        + $"<h1>Your isp adress is changed to {newISPAddress}</h1>"
-                                        + $"<p>Go to <a href = '{dNSRecordHostingProviderURL}' > your hosting provider </a> To update the address.</p></p>"
-                                    + "</body>" 
-                                +"</html>";
-
-            //string htmlBody = $"<html><head><style>body {font - family: 'Segoe UI', Tahoma, Verdana, Arial, sans - serif; font - size: 14px;}</style >
-            //                   </head >
-            //                   <body>
-            //                     <h1> The ISP adres is changed </h1>
-            //                     <p> .</p>
-            //                     <p><a href = 'http://www.example.com' > Visit our website </a> for more information.</p>
-            //                   </body>
-            //                 </html>
-            //                 ";
+            string something = "<html>"
+                                     + "<head>"
+                                        + "<style>"
+                                             + "h1, p { font-family: Segoe UI; }"
+                                             + "p { color: #666; }"
+                                         + "</style>"
+                                     + "</head>"
+                                     + "<body>"
+                                         + $"<h1>Your isp adress is changed to {newISPAddress}</h1>"
+                                         + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}' > {_applicationSettingsOptions.DNSRecordHostProviderName?? _applicationSettingsOptions.DNSRecordHostProviderURL} </a> To update the address.</p></p>"
+                                     + "</body>"
+                                 + "</html>";
 
 
             return something;

@@ -1,7 +1,7 @@
 ﻿using CheckISPAdress.Helpers;
+using CheckISPAdress.Interfaces;
 using CheckISPAdress.Models;
 using CheckISPAdress.Options;
-using CheckISPAdress.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Win32;
@@ -79,7 +79,7 @@ public class CheckISPAddressService : ICheckISPAddressService
                 currentISPAddress = newISPAddress;
 
 
-                string emailBody = _emailService.ISPAddressChangedEmail(newISPAddress, oldISPAddress, _applicationSettingsOptions!.DNSRecordHostingProviderURL, interval, requestCounter, checkCounter);
+                string emailBody = _emailService.ISPAddressChangedEmail(newISPAddress, oldISPAddress, interval, requestCounter, checkCounter);
                 _emailService.SendEmail(emailBody);
 
             }

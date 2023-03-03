@@ -4,7 +4,8 @@
     {
         public string? APIEndpointURL { get; set; }
         public double TimeIntervalInMinutes { get; set; }
-        public string? DNSRecordHostingProviderURL { get; set; }
+        public string? DNSRecordHostProviderName { get; set; }
+        public string? DNSRecordHostProviderURL { get; set; }
         public string? EmailToAdress { get; set; }
         public string? EmailFromAdress { get; set; }
         public string? EmailSubject { get; set; }
@@ -23,7 +24,8 @@
         public class StandardAppsettingsValues 
         {
             public const string APIEndpointURL = "https://api.ipify.org";
-            public const string DNSRecordProviderURL = "YourHostingProviderGoesHere";
+            public const string DNSRecordHostProviderName = "HostingProviderName";
+            public const string DNSRecordHostProviderURL = "HostingProviderURL";
             public const string EmailFromAdress = "EmailFromAdress";
             public const string EmailToAdress = "EmailToAdress";
             public const string EmailSubject = "YourEmailSubject";

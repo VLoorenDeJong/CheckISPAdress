@@ -76,7 +76,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(applicationSettingsOptions?.DNSRecordHostingProviderURL, StandardAppsettingsValues.DNSRecordProviderURL, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(applicationSettingsOptions?.DNSRecordHostProviderURL, StandardAppsettingsValues.DNSRecordHostProviderURL, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
 
