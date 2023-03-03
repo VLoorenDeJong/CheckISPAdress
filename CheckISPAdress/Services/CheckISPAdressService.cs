@@ -1,4 +1,6 @@
-﻿using CheckISPAdress.Options;
+﻿using CheckISPAdress.Helpers;
+using CheckISPAdress.Models;
+using CheckISPAdress.Options;
 using CheckISPAdress.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -27,13 +29,30 @@ public class CheckISPAddressService : ICheckISPAddressService
         _configuration = configuration;
         _applicationSettingsOptions = applicationSettingsOptions;
 
-        //ToDo if mail is configured and the athor settings not send a email!
-        //ToDo seperate the email settings check from API settings if mail is ok you can send a mail with tyhe config error's
-        bool mailConfigChanged = DefaultSettingsHaveBeenChanged();
+        if (_applicationSettingsOptions is not null)
+        {
+            bool mailConfigured = true;
+            ConfigErrorReportModel report = new ConfigErrorReportModel {ChecksPassed = true };
 
+            mailConfigured = ConfigHelpers.DefaultMailSettingsChanged(_applicationSettingsOptions, _logger);
+            if (mailConfigured) CreateBasicMailMessage();
+            if (mailConfigured) report = ConfigHelpers.DefaultSettingsHaveBeenChanged(_applicationSettingsOptions, _logger);
+           
+            if (!(report.ChecksPassed))
+            {
+                string completeMessage = "";
+                foreach (string message in report.ErrorMessages)
+                {
+                    completeMessage = $"{completeMessage}, {message}";
+                }
 
-        if (mailConfigChanged) CreateBasicMailMessage();
-
+                SendEmail(completeMessage);
+            }
+        }
+        else
+        {
+            throw new ArgumentException();
+        }
     }
 
     public Task CheckISPAddressAsync(CancellationToken cancellationToken)
@@ -65,11 +84,11 @@ public class CheckISPAddressService : ICheckISPAddressService
                 SendEmail(ex.Message);
             }
 
-            if (string.Compare(newISPAddress, currentISPAddress, StringComparison.CurrentCultureIgnoreCase) > 0)
+            if (string.Equals(newISPAddress, currentISPAddress, StringComparison.CurrentCultureIgnoreCase))
             {
                 oldISPAddress = currentISPAddress;
                 currentISPAddress = newISPAddress;
-                
+
                 // ToDo create a email body if the ISP addres is changed
                 throw new NotImplementedException();
                 //SendEmail();
@@ -78,21 +97,6 @@ public class CheckISPAddressService : ICheckISPAddressService
 
         }
     }
-    private bool DefaultSettingsHaveBeenChanged()
-    {
-        bool configChanged = true;
-
-        // ToDo check all settings and handle the configuration errrors
-
-        if (string.Equals(_applicationSettingsOptions?.Value?.APIEndpointURL, StandardAppsettingsValues.APIEndpointURL))
-        {
-            Console.WriteLine("The API endpoint is not changed, change the endpoint!");
-            _logger.LogInformation("The API endpoint is not changed, change the endpoint!");
-
-        }
-
-        return configChanged;
-    }
 
     private void CreateBasicMailMessage()
     {
@@ -100,26 +104,28 @@ public class CheckISPAddressService : ICheckISPAddressService
         message.From = new MailAddress(_applicationSettingsOptions?.Value?.EmailFromAdress);
         message.To.Add(new MailAddress(_applicationSettingsOptions?.Value?.EmailToAdress));
         message.Subject = _applicationSettingsOptions?.Value?.EmailSubject;
+        message.Priority = MailPriority.High;        
     }
 
     private void SendEmail(string emailBody)
     {
-        //ToDo Check confuguration if OK
-        SmtpClient client = new SmtpClient();
-
         if (_applicationSettingsOptions?.Value is not null)
         {
-            // Configure the SMTP client with your email provider's SMTP server address and credentials
-            client.Host = _applicationSettingsOptions.Value.EmailHost; // Replace with your SMTP server address
-            client.Port = _applicationSettingsOptions.Value.SMTPPort; // Replace with your SMTP server port number
-            client.UseDefaultCredentials = _applicationSettingsOptions.Value.UseDefaultCredentials; // If your SMTP server requires authentication, set this to false
-            client.Credentials = new NetworkCredential(_applicationSettingsOptions?.Value?.userName, _applicationSettingsOptions?.Value?.password); // Replace with your SMTP server username and password
-            client.EnableSsl = _applicationSettingsOptions.Value.EnableSsl; // Set this to true if your SMTP server requires SSL/TLS encryption
+            // Create a new SmtpClient object within a using block
+            using (SmtpClient client = new SmtpClient())
+            {
+                // Configure the SMTP client with your email provider's SMTP server address and credentials
+                client.Host = _applicationSettingsOptions.Value.MailServer; ; // Replace with your SMTP server address
+                client.Port = _applicationSettingsOptions.Value.SMTPPort; // Replace with your SMTP server port number
+                client.UseDefaultCredentials = _applicationSettingsOptions.Value.UseDefaultCredentials; // If your SMTP server requires authentication, set this to false
+                client.Credentials = new NetworkCredential(_applicationSettingsOptions?.Value?.UserName, _applicationSettingsOptions?.Value?.Password); // Replace with your SMTP server username and password
+                client.EnableSsl = _applicationSettingsOptions.Value.EnableSsl; // Set this to true if your SMTP server requires SSL/TLS encryption               
 
-            message.Body = emailBody;
+                // Send the email message
+                client.Send(message);
+
+            }                   
+
         }
-
-        // Send the email message
-        client.Send(message);
     }
 }

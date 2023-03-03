@@ -8,11 +8,11 @@
         public string? EmailToAdress { get; set; }
         public string? EmailFromAdress { get; set; }
         public string? EmailSubject { get; set; }
-        public string? EmailHost { get; set; }
+        public string? MailServer { get; set; }
         public int SMTPPort { get; set; }
         public bool UseDefaultCredentials { get; set; }
-        public string? userName { get; set; }
-        public string? password { get; set; }
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
         public bool EnableSsl { get; set; }
 
         public class AppsettingsSections
@@ -23,14 +23,13 @@
         public class StandardAppsettingsValues 
         {
             public const string APIEndpointURL = "https://api.ipify.org";
-            public const string HostingProviderURL = "www.YourHostingProviderGoesHere.YAY";
-            public const string EmailFromAdress = "Your@API.com";
-            public const string EmailToAdress = "YourEmailAdress@here.com";
+            public const string DNSRecordProviderURL = "YourHostingProviderGoesHere";
+            public const string EmailFromAdress = "EmailFromAdress";
+            public const string EmailToAdress = "EmailToAdress";
             public const string EmailSubject = "YourEmailSubject";
-            public const string TimeIntervalInMinutes = "https://api1.victorloorendejong.nl//HTTP/GetIp";
-            public const string EmailHost = "smtp.example.com";
+            public const string MailServer = "MailServer";
             public const string UserName = "UserName";
-            public const string password = "Pa$$w0rd";
+            public const string Password = "Pa$$w0rd";
 
         }
     }
