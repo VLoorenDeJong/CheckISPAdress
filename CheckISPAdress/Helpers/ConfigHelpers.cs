@@ -9,11 +9,11 @@ namespace CheckISPAdress.Helpers
 {
     public static class ConfigHelpers
     {
-        public static bool DefaultMailSettingsChanged(IOptions<ApplicationSettingsOptions> _applicationSettingsOptions, ILogger logger)
+        public static bool DefaultMailSettingsChanged(ApplicationSettingsOptions _applicationSettingsOptions, ILogger logger)
         {
             bool configChanged = true;
 
-            if (string.Equals(_applicationSettingsOptions?.Value?.MailServer, StandardAppsettingsValues.MailServer, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.MailServer, StandardAppsettingsValues.MailServer, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
                 string errorMessage = "appsettings: MailServer not configured, this is for the mail you will recieve when the ISP adress is changed.";
@@ -22,7 +22,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(_applicationSettingsOptions?.Value?.UserName, StandardAppsettingsValues.UserName, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.UserName, StandardAppsettingsValues.UserName, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
                 string errorMessage = "appsettings: UserName not configured, this is for the mail you will recieve when the ISP adress is changed.";
@@ -32,7 +32,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (!_applicationSettingsOptions!.Value.UseDefaultCredentials && string.Equals(_applicationSettingsOptions?.Value?.Password, StandardAppsettingsValues.Password, StringComparison.CurrentCultureIgnoreCase))
+            if (!_applicationSettingsOptions!.UseDefaultCredentials && string.Equals(_applicationSettingsOptions?.Password, StandardAppsettingsValues.Password, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
                 string errorMessage = "appsettings: Password not configured, this is for the mail you will recieve when the ISP adress is changed.";
@@ -41,7 +41,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(_applicationSettingsOptions?.Value?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
                 string errorMessage = "EmailToAdress not configured, this is for the mail you will recieve when the ISP adress is changed.";
@@ -50,7 +50,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(_applicationSettingsOptions?.Value?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase))
             {
                 configChanged = false;
                 string errorMessage = "appsettings:EmailFromAdress not confugured, this is for the mail you will recieve when the ISP adress is changed.";
@@ -60,13 +60,13 @@ namespace CheckISPAdress.Helpers
 
             return configChanged;
         }
-        public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(IOptions<ApplicationSettingsOptions> applicationSettingsOptions, ILogger logger)
+        public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
         {
             ConfigErrorReportModel report = new();
 
             report.ChecksPassed = true;
 
-            if (string.Equals(applicationSettingsOptions?.Value?.APIEndpointURL, StandardAppsettingsValues.APIEndpointURL, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(applicationSettingsOptions?.APIEndpointURL, StandardAppsettingsValues.APIEndpointURL, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
                 string errorMessage = "The APIEndpointURL is not changed, change the endpoint! (The endpoint of this API is: https://yourAPIURL//HTTP/GetIp)";
@@ -76,7 +76,7 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(applicationSettingsOptions?.Value?.DNSRecordProviderURL, StandardAppsettingsValues.DNSRecordProviderURL, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(applicationSettingsOptions?.DNSRecordHostingProviderURL, StandardAppsettingsValues.DNSRecordProviderURL, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
 
@@ -86,7 +86,7 @@ namespace CheckISPAdress.Helpers
                 report.ErrorMessages.Add(errorMessage);
             }
 
-            if (string.Equals(applicationSettingsOptions?.Value?.EmailSubject, StandardAppsettingsValues.EmailSubject, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(applicationSettingsOptions?.EmailSubject, StandardAppsettingsValues.EmailSubject, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
 

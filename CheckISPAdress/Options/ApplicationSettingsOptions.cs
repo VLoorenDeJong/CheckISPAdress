@@ -4,7 +4,7 @@
     {
         public string? APIEndpointURL { get; set; }
         public double TimeIntervalInMinutes { get; set; }
-        public string? DNSRecordProviderURL { get; set; }
+        public string? DNSRecordHostingProviderURL { get; set; }
         public string? EmailToAdress { get; set; }
         public string? EmailFromAdress { get; set; }
         public string? EmailSubject { get; set; }

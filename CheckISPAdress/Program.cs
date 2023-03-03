@@ -1,6 +1,7 @@
 using CheckISPAdress.Options;
 using CheckISPAdress.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
@@ -13,14 +14,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-
-// Add singleton service
-builder.Services.AddSingleton<MySingletonService>();
-
 // Add HttpClient and CheckISPAddressService
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ICheckISPAddressService, CheckISPAddressService>();
+builder.Services.AddSingleton<IMailService, MailService>();
 
 // Configure interval using options
 builder.Services.Configure<ApplicationSettingsOptions>(builder.Configuration.GetSection(AppsettingsSections.ApplicationSettings));
