@@ -58,17 +58,24 @@ namespace CheckISPAdress.Helpers
                 ThrowEmailConfigError(errorMessage, logger);
             }
 
-            if (_applicationSettingsOptions?.BackupAPIS is null || _applicationSettingsOptions?.BackupAPIS?.Count == 0)
-            {
-
-                MandatoryConfigurationPassed = false;
-                string errorMessage = "appsettings: BackupAPIS in appsettings not confugured, this is for checking for you ISP adress when the ISP adress is changed.";
-
-                ThrowEmailConfigError(errorMessage, logger);
-            }
-
             return MandatoryConfigurationPassed;
         }
+
+        private static bool URLCheck(List<string?>? backupAPIS)
+        {
+            bool urlConfigurred = true;
+
+            if (backupAPIS is not null)
+            {
+                foreach (string API in backupAPIS)
+                {
+                    if (string.IsNullOrWhiteSpace(API)) urlConfigurred = false;
+                }
+            }
+
+            return urlConfigurred;
+        }
+
         public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
         {
             ConfigErrorReportModel report = new();
