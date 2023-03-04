@@ -2,6 +2,7 @@
 using CheckISPAdress.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
@@ -58,22 +59,39 @@ namespace CheckISPAdress.Helpers
                 ThrowEmailConfigError(errorMessage, logger);
             }
 
+            if (_applicationSettingsOptions?.BackupAPIS is null || BackupAPIUrlError(_applicationSettingsOptions?.BackupAPIS, logger))
+            {
+
+                MandatoryConfigurationPassed = false;
+                string errorMessage = "appsettings: BackupAPIS in appsettings not confugured, this is for checking for you ISP adress when the ISP adress is changed.";
+
+                ThrowEmailConfigError(errorMessage, logger);
+            }
+
             return MandatoryConfigurationPassed;
         }
 
-        private static bool URLCheck(List<string?>? backupAPIS)
+        private static bool BackupAPIUrlError(List<string?>? backupAPIURLs, ILogger logger)
         {
-            bool urlConfigurred = true;
+            bool urlConfigError = false;
 
-            if (backupAPIS is not null)
+            if (backupAPIURLs is not null)
             {
-                foreach (string API in backupAPIS)
+                foreach (string? APIUrl in backupAPIURLs)
                 {
-                    if (string.IsNullOrWhiteSpace(API)) urlConfigurred = false;
+                    if (string.IsNullOrWhiteSpace(APIUrl))
+                    {
+                        if (!Regex.IsMatch(APIUrl, @"^https?:\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"))
+                        {
+                            urlConfigError = true;
+                            string errorMessage = $"appsettings: Backup API URL not correct, index: {backupAPIURLs.IndexOf(APIUrl)}, URL: {APIUrl}";
+                            ThrowEmailConfigError(errorMessage, logger);
+                        }
+                    }
                 }
             }
 
-            return urlConfigurred;
+            return urlConfigError;
         }
 
         public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
