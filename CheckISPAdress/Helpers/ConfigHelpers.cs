@@ -42,19 +42,19 @@ namespace CheckISPAdress.Helpers
             }
 
 
-            if (string.Equals(_applicationSettingsOptions?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase) || !EmailAddressIsValid(_applicationSettingsOptions?.EmailToAdress))
             {
                 MandatoryConfigurationPassed = false;
-                string errorMessage = "appsettings: EmailToAdress in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = $"appsettings: EmailToAdress: {_applicationSettingsOptions?.EmailToAdress} in appsettings not confugured correctly";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
 
 
-            if (string.Equals(_applicationSettingsOptions?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(_applicationSettingsOptions?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase) || !EmailAddressIsValid(_applicationSettingsOptions?.EmailFromAdress))
             {
                 MandatoryConfigurationPassed = false;
-                string errorMessage = "appsettings: EmailFromAdress in appsettings not confugured, this is for the mail you will recieve when the ISP adress is changed.";
+                string errorMessage = $"appsettings: EmailFromAdress: {_applicationSettingsOptions?.EmailFromAdress} in appsettings not confugured correctly";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -71,6 +71,18 @@ namespace CheckISPAdress.Helpers
             return MandatoryConfigurationPassed;
         }
 
+        private static bool EmailAddressIsValid(string? emailAdressToValidate)
+        {
+            bool isVallid = false;
+            
+            if (!string.IsNullOrWhiteSpace(emailAdressToValidate))
+            {
+                isVallid = Regex.IsMatch(emailAdressToValidate!, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+            }
+
+            return isVallid;
+        }
+
         private static bool BackupAPIUrlError(List<string?>? backupAPIURLs, ILogger logger)
         {
             bool urlConfigError = false;
@@ -79,14 +91,11 @@ namespace CheckISPAdress.Helpers
             {
                 foreach (string? APIUrl in backupAPIURLs)
                 {
-                    if (string.IsNullOrWhiteSpace(APIUrl))
+                    if (string.IsNullOrWhiteSpace(APIUrl) || !Regex.IsMatch(APIUrl, @"^https?:\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"))
                     {
-                        if (!Regex.IsMatch(APIUrl, @"^https?:\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"))
-                        {
-                            urlConfigError = true;
-                            string errorMessage = $"appsettings: Backup API URL not correct, index: {backupAPIURLs.IndexOf(APIUrl)}, URL: {APIUrl}";
-                            ThrowEmailConfigError(errorMessage, logger);
-                        }
+                        urlConfigError = true;
+                        string errorMessage = $"appsettings: Backup API URL not correct, index: {backupAPIURLs.IndexOf(APIUrl)}, URL: {APIUrl}";
+                        ThrowEmailConfigError(errorMessage, logger);
                     }
                 }
             }
