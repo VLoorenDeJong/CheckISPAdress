@@ -76,11 +76,17 @@ namespace CheckISPAdress.Services
                     try
                     {
                         // Send the email message
-                        client.Send(message);
+                         client.Send(message);
+                    }
+                    catch (System.Net.Mail.SmtpException ex)
+                    {
+                        Type exceptionType = ex.GetType();
+                        _logger.LogError("Email account password might be wrong. Exception type: {exceptionType}  Message:{message}", exceptionType, ex.Message);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError("Something went wrong with sending the email. Message:{message}", ex.Message);
+                        Type exceptionType = ex.GetType();
+                        _logger.LogError("Something went wrong with sending the email. Exception type: {exceptionType} Message:{message}", exceptionType, ex.Message);
                     }
 
                 }
@@ -88,10 +94,13 @@ namespace CheckISPAdress.Services
             }
         }
 
-        public string ISPAddressChangedEmail(string newISPAddress, string oldISPAddress, double interval, int requestCounter, int checkCounter)
+        public string ISPAddressChangedEmail(string newISPAddress, double interval, int requestCounter, int checkCounter)
         {
             string hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderName!;
-            if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase)) hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
+            if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase))
+            { 
+                hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
+            }
 
             string emailBody = "<html>"
                                      + "<head>"
@@ -112,6 +121,13 @@ namespace CheckISPAdress.Services
                                          + $"<p>Script runs: <strong> {checkCounter} </strong><p>"
                                      + "</body>"
                                  + "</html>";
+
+            return emailBody;
+        }
+
+        public string HeartBeatEmail()
+        {
+            string emailBody = string.Empty;
 
             return emailBody;
         }
