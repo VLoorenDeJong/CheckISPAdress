@@ -74,7 +74,15 @@ public class CheckISPAddressService : ICheckISPAddressService
                     Type exceptionType = ex.GetType();
 
                     _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                    string emailBody = $"exceptionType:{exceptionType}, message: {ex.Message}";
+
+                    string message = $"<p>API Did not respond:</p>"
+                                   + $"<p><strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></p>"
+                                   + "<p>exceptionType:</p>"
+                                   + $"<p><strong>{exceptionType}</strong></p>"
+                                   + "<p>message:</p>"
+                                   +$"<p><strong>{ex.Message}<strong></p>";
+
+                    string emailBody = _emailService.CreateEmail(message);
 
                     _emailService.SendEmail(emailBody);
                 }
@@ -85,7 +93,16 @@ public class CheckISPAddressService : ICheckISPAddressService
                 Type exceptionType = ex.GetType();
 
                 _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                string emailBody = $"exceptionType:{exceptionType}, message: {ex.Message}";
+                string message = $"<p>Exception fetching ISP address from API:</p>"
+                                    + $"<p><strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></p>"
+                                    + "<p>exceptionType:"
+                                    + $"<p><strong>{exceptionType}</strong></p>"
+                                    + "<p>message:"
+                                    + $"<p><strong>{ex.Message}<strong></p>";
+
+                string emailBody = _emailService.CreateEmail(message);
+
+
 
                 _emailService.SendEmail(emailBody);
             }
@@ -108,16 +125,12 @@ public class CheckISPAddressService : ICheckISPAddressService
         if (ISPAdresses is null) ISPAdresses = new();
         ISPAdresses.Clear();
 
-        List<string> requestedUrls = new();
-        int emailcount = 0;
-
         foreach (string? APIUrl in _applicationSettingsOptions?.BackupAPIS!)
         {
             using (var client = new HttpClient())
             {
                 try
                 {
-
                     ISPAdresses.Add("192.168.2.13");
                     //HttpResponseMessage response = await client.GetAsync(APIUrl);
                     //response.EnsureSuccessStatusCode();
@@ -137,12 +150,17 @@ public class CheckISPAddressService : ICheckISPAddressService
                     Type exceptionType = ex.GetType();
 
                     _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                    string emailBody = $"API Did not respond: <br /> {APIUrl} <br /> <br />exceptionType:{exceptionType} <br /> message: {ex.Message}";
+
+                    string message = $"<p>API Did not respond:</p>"
+                                    +$"<p><strong>{APIUrl}</strong></p>"
+                                    + "<p>exceptionType:</p>"
+                                    +$"<p><strong>{exceptionType}</strong></p>"
+                                    + "<p>message:</p>"
+                                    +$"<p><strong>{ex.Message}<strong></p>";
+
+                    string emailBody = _emailService.CreateEmail(message);
 
                     _emailService.SendEmail(emailBody);
-                    emailcount++;
-
-
                 }
                 catch (Exception ex)
                 {
@@ -150,7 +168,16 @@ public class CheckISPAddressService : ICheckISPAddressService
                     Type exceptionType = ex.GetType();
 
                     _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                    string emailBody = $"API Did not respond: <br /> {APIUrl} <br /> <br />exceptionType:{exceptionType} <br /> message: {ex.Message}";
+
+                    string message = $"<p>Exception fetching ISP address from API:</p>"
+                                    +$"<p><strong>{APIUrl}</strong></p>"
+                                    + "<p>exceptionType:"
+                                    +$"<p><strong>{exceptionType}</strong></p>"
+                                    + "<p>message:"
+                                    +$"<p><strong>{ex.Message}<strong></p>";
+
+                    string emailBody = _emailService.CreateEmail(message);
+
 
                     _emailService.SendEmail(emailBody);
                 }

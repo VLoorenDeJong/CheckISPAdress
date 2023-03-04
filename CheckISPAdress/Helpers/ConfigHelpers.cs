@@ -74,7 +74,7 @@ namespace CheckISPAdress.Helpers
         private static bool EmailAddressIsValid(string? emailAdressToValidate)
         {
             bool isVallid = false;
-            
+
             if (!string.IsNullOrWhiteSpace(emailAdressToValidate))
             {
                 isVallid = Regex.IsMatch(emailAdressToValidate!, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
@@ -112,10 +112,15 @@ namespace CheckISPAdress.Helpers
             if (string.Equals(applicationSettingsOptions?.APIEndpointURL, StandardAppsettingsValues.APIEndpointURL, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
-                string errorMessage = "appsettings: The APIEndpointURL in appsettings is not changed, change the endpoint! (The endpoint of this API is: https://yourAPIURL//HTTP/GetIp) <br />";
+
+                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                                    + $"<p>The <strong>APIEndpointURL</strong> in appsettings is not changed</p>"
+                                    + "<p>change the endpoint!</p>"
+                                    + $"<p>The endpoint of this API is:</p>"
+                                    + $"<p><strong>{applicationSettingsOptions?.APIEndpointURL}<strong></p>";
 
                 ReportConfigError(errorMessage, logger);
-                report.ErrorMessages.Add(errorMessage);
+                report.ErrorMessage = report.ErrorMessage + errorMessage;
             }
 
 
@@ -123,20 +128,24 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = "appsettings: DNSRecordProviderURL in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed. <br />";
+                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                                    + $"<p>The <strong> DNSRecordProviderURL </strong> in appsettings is not changed</p>"
+                                    + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
 
                 ReportConfigError(errorMessage, logger);
-                report.ErrorMessages.Add(errorMessage);
+                report.ErrorMessage = report.ErrorMessage + errorMessage;
             }
 
             if (string.Equals(applicationSettingsOptions?.EmailSubject, StandardAppsettingsValues.EmailSubject, StringComparison.CurrentCultureIgnoreCase))
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = "appsettings: EmailSubject in appsetting is not changed, this is for the mail you will recieve when the ISP adress is changed. <br />";
+                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                                    + $"<p>The <strong> EmailSubject </strong> in appsettings is not changed</p>"
+                                    + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
 
                 ReportConfigError(errorMessage, logger);
-                report.ErrorMessages.Add(errorMessage);
+                report.ErrorMessage = report.ErrorMessage + errorMessage;
             }
 
             return report;

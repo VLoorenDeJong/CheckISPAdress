@@ -10,6 +10,7 @@ using static CheckISPAdress.Options.ApplicationSettingsOptions;
 namespace CheckISPAdress.Services
 {
     public class MailService : IMailService
+
     {
         private readonly ILogger _logger;
         private readonly ApplicationSettingsOptions _applicationSettingsOptions;
@@ -32,13 +33,9 @@ namespace CheckISPAdress.Services
 
                 if (!(report.ChecksPassed))
                 {
-                    string completeMessage = "";
-                    foreach (string message in report.ErrorMessages)
-                    {
-                        completeMessage = $"{completeMessage}, {message}";
-                    }
+                    string emailBody = CreateEmail(report?.ErrorMessage!);
 
-                    SendEmail(completeMessage);
+                    SendEmail(emailBody);
                 }
             }
             else
@@ -76,7 +73,7 @@ namespace CheckISPAdress.Services
                     try
                     {
                         // Send the email message
-                         client.Send(message);
+                        client.Send(message);
                     }
                     catch (System.Net.Mail.SmtpException ex)
                     {
@@ -98,11 +95,30 @@ namespace CheckISPAdress.Services
         {
             string hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderName!;
             if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase))
-            { 
+            {
                 hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
             }
 
-            string emailBody = "<html>"
+
+            string emailMessage = $@"<p><strong> {newISPAddress} </strong> is your new ISP adress </p>"
+                                + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
+                                + $"<p>I wish you a splendid rest of your day!</p>"
+                                + $"<p>Your API</p>"
+                                + $"<p><strong>Here are some statistics:</strong></p>"
+                                + $"<p>A call is made every <strong> {interval} </strong>minutes<p>"
+                                + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions.DateTimeFormat)} </strong><p>"
+                                + $"<p>API Calls: <strong> {requestCounter} </strong><p>"
+                                + $"<p>Script runs: <strong> {checkCounter} </strong><p>";
+
+            string emailBody = CreateEmail(emailMessage);
+
+            return emailBody;
+        }
+
+
+        public string CreateEmail(string message)
+        {
+            string outputMessage ="<html>"
                                      + "<head>"
                                         + "<style>"
                                              + "h1, h3, h4, h5, p { font-family: Segoe UI; }"
@@ -110,19 +126,11 @@ namespace CheckISPAdress.Services
                                          + "</style>"
                                      + "</head>"
                                      + "<body>"
-                                         + $@"<p><strong> {newISPAddress} </strong> is your new ISP adress </p>"
-                                         + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
-                                         + $"<p>I wish you a splendid rest of your day!</p>"
-                                         + $"<p>Your API</p>"
-                                         + $"<p><strong>Here are some statistics:</strong></p>"
-                                         + $"<p>A call is made every <strong> {interval} </strong>minutes<p>"
-                                         + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions.DateTimeFormat)} </strong><p>"
-                                         + $"<p>API Calls: <strong> {requestCounter} </strong><p>"
-                                         + $"<p>Script runs: <strong> {checkCounter} </strong><p>"
+                                     + $"{message}"
                                      + "</body>"
                                  + "</html>";
 
-            return emailBody;
+            return outputMessage;
         }
 
         public string HeartBeatEmail()
