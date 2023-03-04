@@ -9,13 +9,13 @@ namespace CheckISPAdress.Helpers
 {
     public static class ConfigHelpers
     {
-        public static bool DefaultMailSettingsChanged(ApplicationSettingsOptions _applicationSettingsOptions, ILogger logger)
+        public static bool MandatoryConfigurationChecks(ApplicationSettingsOptions _applicationSettingsOptions, ILogger logger)
         {
-            bool configChanged = true;
+            bool MandatoryConfigurationPassed = true;
 
             if (string.Equals(_applicationSettingsOptions?.MailServer, StandardAppsettingsValues.MailServer, StringComparison.CurrentCultureIgnoreCase))
             {
-                configChanged = false;
+                MandatoryConfigurationPassed = false;
                 string errorMessage = "appsettings: MailServer in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
@@ -24,7 +24,7 @@ namespace CheckISPAdress.Helpers
 
             if (string.Equals(_applicationSettingsOptions?.UserName, StandardAppsettingsValues.UserName, StringComparison.CurrentCultureIgnoreCase))
             {
-                configChanged = false;
+                MandatoryConfigurationPassed = false;
                 string errorMessage = "appsettings: UserName in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
 
@@ -34,7 +34,7 @@ namespace CheckISPAdress.Helpers
 
             if (!_applicationSettingsOptions!.UseDefaultCredentials && string.Equals(_applicationSettingsOptions?.Password, StandardAppsettingsValues.Password, StringComparison.CurrentCultureIgnoreCase))
             {
-                configChanged = false;
+                MandatoryConfigurationPassed = false;
                 string errorMessage = "appsettings: Password in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
@@ -43,7 +43,7 @@ namespace CheckISPAdress.Helpers
 
             if (string.Equals(_applicationSettingsOptions?.EmailToAdress, StandardAppsettingsValues.EmailToAdress, StringComparison.CurrentCultureIgnoreCase))
             {
-                configChanged = false;
+                MandatoryConfigurationPassed = false;
                 string errorMessage = "appsettings: EmailToAdress in appsettings not configured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
@@ -52,13 +52,22 @@ namespace CheckISPAdress.Helpers
 
             if (string.Equals(_applicationSettingsOptions?.EmailFromAdress, StandardAppsettingsValues.EmailFromAdress, StringComparison.CurrentCultureIgnoreCase))
             {
-                configChanged = false;
+                MandatoryConfigurationPassed = false;
                 string errorMessage = "appsettings: EmailFromAdress in appsettings not confugured, this is for the mail you will recieve when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
 
-            return configChanged;
+            if (_applicationSettingsOptions?.BackupAPIS is null || _applicationSettingsOptions?.BackupAPIS?.Count == 0)
+            {
+
+                MandatoryConfigurationPassed = false;
+                string errorMessage = "appsettings: BackupAPIS in appsettings not confugured, this is for checking for you ISP adress when the ISP adress is changed.";
+
+                ThrowEmailConfigError(errorMessage, logger);
+            }
+
+            return MandatoryConfigurationPassed;
         }
         public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
         {

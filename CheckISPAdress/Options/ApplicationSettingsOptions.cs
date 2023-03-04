@@ -3,6 +3,7 @@
     public class ApplicationSettingsOptions
     {
         public string? APIEndpointURL { get; set; }
+        public List<string?>? BackupAPIS { get; set; }
         public double TimeIntervalInMinutes { get; set; }
         public string? DNSRecordHostProviderName { get; set; }
         public string? DNSRecordHostProviderURL { get; set; }
@@ -24,7 +25,7 @@
 
         public class StandardAppsettingsValues 
         {
-            public const string APIEndpointURL = "https://api.ipify.org";
+            public const string APIEndpointURL = "ThisAPIEnpointURL";
             public const string DNSRecordHostProviderName = "HostingProviderName";
             public const string DNSRecordHostProviderURL = "HostingProviderURL";
             public const string EmailFromAdress = "EmailFromAdress";

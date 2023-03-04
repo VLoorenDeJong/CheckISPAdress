@@ -26,7 +26,7 @@ namespace CheckISPAdress.Services
                 bool mailConfigured = true;
                 ConfigErrorReportModel report = new ConfigErrorReportModel { ChecksPassed = true };
 
-                mailConfigured = ConfigHelpers.DefaultMailSettingsChanged(_applicationSettingsOptions, _logger);
+                mailConfigured = ConfigHelpers.MandatoryConfigurationChecks(_applicationSettingsOptions, _logger);
                 if (mailConfigured) CreateBasicMailMessage();
                 if (mailConfigured) report = ConfigHelpers.DefaultSettingsHaveBeenChanged(_applicationSettingsOptions, _logger);
 
