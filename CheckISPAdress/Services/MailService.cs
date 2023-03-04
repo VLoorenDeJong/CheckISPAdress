@@ -25,7 +25,7 @@ namespace CheckISPAdress.Services
             if (_applicationSettingsOptions is not null)
             {
                 bool mailConfigured = true;
-                ConfigErrorReportModel report = new ConfigErrorReportModel { ChecksPassed = true };
+                ConfigErrorReportModel report = new();
 
                 mailConfigured = ConfigHelpers.MandatoryConfigurationChecks(_applicationSettingsOptions, _logger);
                 if (mailConfigured) CreateBasicMailMessage();
@@ -35,7 +35,7 @@ namespace CheckISPAdress.Services
                 {
                     string emailBody = CreateEmail(report?.ErrorMessage!);
 
-                    SendEmail(emailBody);
+                    SendEmail(emailBody, "CheckISPAdress: Appsettings needs more configuration");
                 }
             }
             else
@@ -49,11 +49,10 @@ namespace CheckISPAdress.Services
             // Set the sender, recipient, subject, and body of the message
             message.From = new MailAddress(_applicationSettingsOptions.EmailFromAdress!);
             message.To.Add(new MailAddress(_applicationSettingsOptions.EmailToAdress!));
-            message.Subject = _applicationSettingsOptions!.EmailSubject;
             message.Priority = MailPriority.High;
         }
 
-        public void SendEmail(string emailBody)
+        public void SendEmail(string emailBody, string subject)
         {
             if (_applicationSettingsOptions is not null)
             {
@@ -67,6 +66,8 @@ namespace CheckISPAdress.Services
                     client.Credentials = new NetworkCredential(_applicationSettingsOptions?.UserName, _applicationSettingsOptions?.Password); // Replace with your SMTP server username and password
                     client.EnableSsl = _applicationSettingsOptions!.EnableSsl; // Set this to true if your SMTP server requires SSL/TLS encryption               
 
+
+                    message.Subject = subject;
                     message.Body = emailBody;
                     message.IsBodyHtml = true;
 
@@ -91,42 +92,17 @@ namespace CheckISPAdress.Services
             }
         }
 
-        public string ISPAddressChangedEmail(string newISPAddress, double interval, int requestCounter, int checkCounter)
+        public string CreateEmail(string emailMessage)
         {
-            string hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderName!;
-            if (string.Equals(hostingProviderText, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase))
-            {
-                hostingProviderText = _applicationSettingsOptions.DNSRecordHostProviderURL!;
-            }
-
-
-            string emailMessage = $@"<p><strong> {newISPAddress} </strong> is your new ISP adress </p>"
-                                + $"<p>Go to <a href = '{_applicationSettingsOptions.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
-                                + $"<p>I wish you a splendid rest of your day!</p>"
-                                + $"<p>Your API</p>"
-                                + $"<p><strong>Here are some statistics:</strong></p>"
-                                + $"<p>A call is made every <strong> {interval} </strong>minutes<p>"
-                                + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions.DateTimeFormat)} </strong><p>"
-                                + $"<p>API Calls: <strong> {requestCounter} </strong><p>"
-                                + $"<p>Script runs: <strong> {checkCounter} </strong><p>";
-
-            string emailBody = CreateEmail(emailMessage);
-
-            return emailBody;
-        }
-
-
-        public string CreateEmail(string message)
-        {
-            string outputMessage ="<html>"
+            string outputMessage = "<html>"
                                      + "<head>"
                                         + "<style>"
-                                             + "h1, h3, h4, h5, p { font-family: Segoe UI; }"
-                                             + "p { color: #666; }"
+                                             + "h1, h3, h4, h5, p { color: #666; font-family: Segoe UI; }"
+                                             + "p { color: #666; font-family: Segoe UI; }"
                                          + "</style>"
                                      + "</head>"
                                      + "<body>"
-                                     + $"{message}"
+                                     + $"{emailMessage}"
                                      + "</body>"
                                  + "</html>";
 
@@ -135,6 +111,9 @@ namespace CheckISPAdress.Services
 
         public string HeartBeatEmail()
         {
+
+
+            //string ISPAddressChangedEmail(string newISPAddress, double interval, int requestCounter, int checkCounter);
             string emailBody = string.Empty;
 
             return emailBody;

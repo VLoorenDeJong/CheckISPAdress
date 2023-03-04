@@ -63,7 +63,7 @@ namespace CheckISPAdress.Helpers
             {
 
                 MandatoryConfigurationPassed = false;
-                string errorMessage = "appsettings: BackupAPIS in appsettings not confugured, this is for checking for you ISP adress when the ISP adress is changed.";
+                string errorMessage = "appsettings: BackupAPIs in appsettings not confugured, this is for checking for you ISP adress when the ISP adress is changed.";
 
                 ThrowEmailConfigError(errorMessage, logger);
             }
@@ -113,7 +113,7 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong>APIEndpointURL</strong> in appsettings is not changed</p>"
                                     + "<p>change the endpoint!</p>"
                                     + $"<p>The endpoint of this API is:</p>"
@@ -128,7 +128,7 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong> DNSRecordProviderURL </strong> in appsettings is not changed</p>"
                                     + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
 
@@ -140,7 +140,7 @@ namespace CheckISPAdress.Helpers
             {
                 report.ChecksPassed = false;
 
-                string errorMessage = $"<h4><strong>appsettings:</strong></p></h4>"
+                string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong> EmailSubject </strong> in appsettings is not changed</p>"
                                     + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
 

@@ -1,3 +1,4 @@
+using CheckISPAdress.Helpers;
 using CheckISPAdress.Interfaces;
 using CheckISPAdress.Options;
 using CheckISPAdress.Services;
@@ -17,6 +18,7 @@ builder.Services.AddSwaggerGen();
 
 // Add HttpClient and CheckISPAddressService
 builder.Services.AddHttpClient();
+
 builder.Services.AddSingleton<ICheckISPAddressService, CheckISPAddressService>();
 builder.Services.AddSingleton<IMailService, MailService>();
 
@@ -30,8 +32,8 @@ if (serviceProvider != null)
 {
     ICheckISPAddressService? checkISPAddressService = serviceProvider?.GetService<ICheckISPAddressService>();
 
-    CancellationToken cts = new CancellationToken();
-    checkISPAddressService?.CheckISPAddressAsync(cts);
+    CancellationToken token = new CancellationToken();
+    checkISPAddressService?.CheckISPAddressAsync(token);
 }
 
 if (builder is not null)
