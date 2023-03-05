@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CheckISPAdress.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace CheckISPAdress.Controllers
 {
@@ -6,11 +8,23 @@ namespace CheckISPAdress.Controllers
     [ApiController]
     public class HTTPController : ControllerBase
     {
+        private readonly IISPAdressCounterService _counterService;
+        private readonly ILogger<HTTPController> _logger;
+
+        public HTTPController(ILogger<HTTPController> logger, IISPAdressCounterService counterService)
+        {
+            _counterService = counterService;
+            _logger = logger;
+        }
+
         [HttpGet("GetIp", Name = "GetIp")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult<string> GetIpAddress()
         {
+            _logger.LogInformation("ISP address has been rewuested");
+            _counterService.ISPEndpointRequests++;
+
             HttpContext context = HttpContext;
             string? outputString = string.Empty;
 
@@ -38,9 +52,25 @@ namespace CheckISPAdress.Controllers
 
             if (!string.IsNullOrEmpty(outputString))
             {
+                string logInfo = string.Empty;
+                if (!string.IsNullOrWhiteSpace(outputString))
+                {
+                    int secondToLastDotIndex = outputString.LastIndexOf(".");
+                    logInfo = outputString.Substring(0, secondToLastDotIndex);
+                    logInfo = $"{logInfo}....";
+                }
+                else
+                {
+                    logInfo = outputString;
+                }
+                _logger.LogInformation("Success adres returned:{logInfo}", logInfo);
                 return outputString;
             }
-            else return "What?!?";
+            else
+            {
+                _logger.LogError("Something went wrong output was: {outputString}", outputString);
+                return "What?!?";
+            }
 
         }
     }

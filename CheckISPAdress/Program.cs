@@ -19,6 +19,7 @@ builder.Services.AddSwaggerGen();
 // Add HttpClient and CheckISPAddressService
 builder.Services.AddHttpClient();
 
+builder.Services.AddSingleton<IISPAdressCounterService, ISPAdressCounterService>();
 builder.Services.AddSingleton<ICheckISPAddressService, CheckISPAddressService>();
 builder.Services.AddSingleton<IMailService, MailService>();
 
