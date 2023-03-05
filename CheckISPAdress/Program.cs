@@ -34,7 +34,7 @@ if (serviceProvider != null)
     ICheckISPAddressService? checkISPAddressService = serviceProvider?.GetService<ICheckISPAddressService>();
 
     CancellationToken token = new CancellationToken();
-    checkISPAddressService?.CheckISPAddressAsync(token);
+    checkISPAddressService?.StartISPCheckTimers(token);
 }
 
 if (builder is not null)

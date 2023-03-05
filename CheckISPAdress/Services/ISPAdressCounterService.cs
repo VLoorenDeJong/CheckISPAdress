@@ -12,11 +12,13 @@ namespace CheckISPAdress.Services
             ServiceRequestCounter = 0;
             ServiceCheckCounter = 1;
             FailedISPRequestCounter = 0;
+            ExternalServiceCheckCounter = 0;
         }
 
         private int ISPEndpointRequests;
         private int ServiceRequestCounter;
         private int ServiceCheckCounter;
+        private int ExternalServiceCheckCounter;
         private int FailedISPRequestCounter;
 
         public void AddISPEndpointRequests()
@@ -47,6 +49,16 @@ namespace CheckISPAdress.Services
         public int GetServiceCheckCounter()
         {
             return ServiceCheckCounter;
+        }
+
+        public void AddExternalServiceCheckCounter()
+        {
+            ExternalServiceCheckCounter++;
+        }
+
+        public int GetExternalServiceCheckCounter()
+        {
+            return ExternalServiceCheckCounter;
         }
 
         public void AddFailedISPRequestCounter()

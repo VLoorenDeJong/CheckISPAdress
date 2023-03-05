@@ -20,6 +20,7 @@ namespace CheckISPAdress.Options
         public string? Password { get; set; }
         public TimeSpan HeatbeatEmailTimeOfDay { get; set; }
         public DayOfWeek HeatbeatEmailDayOfWeek { get; set; }
+        public int HeatbeatEmailIntervalDays { get; set; }
         public bool EnableSsl { get; set; }
 
         public class AppsettingsSections

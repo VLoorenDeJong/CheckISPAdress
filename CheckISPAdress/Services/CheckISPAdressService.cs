@@ -39,9 +39,9 @@ public class CheckISPAddressService : ICheckISPAddressService
         ExternalISPAddress = string.Empty;
     }
 
-    public Task CheckISPAddressAsync(CancellationToken cancellationToken)
+    public Task StartISPCheckTimers(CancellationToken cancellationToken)
     {
-        ConfigErrorReportModel report = ConfigHelpers.DefaultSettingsHaveBeenChanged(_applicationSettingsOptions, _logger);
+        ConfigErrorReportModel report = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
 
         if (report.ChecksPassed)
         {
@@ -51,12 +51,38 @@ public class CheckISPAddressService : ICheckISPAddressService
 
             emailTimer = new Timer(async (state) => await GetISPAddressAsync(state!), null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
             checkCounterTimer = new Timer(state => { _counterService.AddServiceCheckCounter(); }, null, TimeSpan.FromMinutes(interval), TimeSpan.FromMinutes(interval));
-            //HeartbeatemailTimer = 
+            SetupHeartbeatTimer();
 
 
             return Task.CompletedTask;
         }
         return Task.FromException(new TaskCanceledException());
+    }
+
+    private void SetupHeartbeatTimer()
+    {
+        DateTime now = DateTime.Now;
+        DateTime nextOccurrence = now.AddDays(((int)_applicationSettingsOptions.HeatbeatEmailDayOfWeek - (int)now.DayOfWeek + 7) % 7).Date.Add(_applicationSettingsOptions.HeatbeatEmailTimeOfDay);
+
+        if (nextOccurrence < now)
+        {
+            nextOccurrence = nextOccurrence.AddDays(_applicationSettingsOptions.HeatbeatEmailIntervalDays);
+        }
+
+        TimeSpan heartBeatInterval = TimeSpan.FromDays(_applicationSettingsOptions.HeatbeatEmailIntervalDays);
+
+        HeartbeatemailTimer = new Timer(async (state) =>
+        {
+            // Do something here when the timer elapses, such as calling an async method
+            await HeartBeatCheck();
+        }, null, (int)(nextOccurrence - now).TotalMilliseconds, (int)heartBeatInterval.TotalMilliseconds);
+    }
+
+    private async Task HeartBeatCheck()
+    {
+        await GetISPAddressFromBackupAPIs(true);
+        _emailService.SendHeartBeatEmail(_counterService, oldISPAddress, currentISPAddress, newISPAddress, ISPAdressChecks);
+        ISPAdressChecks.Clear();
     }
 
     private async Task GetISPAddressAsync(object state)
@@ -74,7 +100,7 @@ public class CheckISPAddressService : ICheckISPAddressService
                 newISPAddress = await response?.Content?.ReadAsStringAsync()!;
 
                 // Checking if the counters are still in sync 
-                if (_counterService.GetServiceRequestCounter != _counterService.GetServiceCheckCounter)
+                if (_counterService.GetServiceRequestCounter() != _counterService.GetServiceCheckCounter())
                 {
                     _emailService.SendCounterDifferenceEmail(_counterService);
                 }
@@ -84,7 +110,7 @@ public class CheckISPAddressService : ICheckISPAddressService
                 if (ex.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                 {
                    _counterService.AddFailedISPRequestCounter();
-                    await GetISPAddressFromBackupAPIs();
+                    await GetISPAddressFromBackupAPIs(false);
                 }
                 else
                 {
@@ -115,6 +141,7 @@ public class CheckISPAddressService : ICheckISPAddressService
             if (_counterService.GetServiceRequestCounter() == 1 && _counterService.GetFailedISPRequestCounter() == 0)
             {
                 _emailService.SendConfigSuccessMail(newISPAddress, _counterService, interval);
+                await HeartBeatCheck();
             }
             else
             {
@@ -124,10 +151,12 @@ public class CheckISPAddressService : ICheckISPAddressService
         }
     }
 
-    private async Task GetISPAddressFromBackupAPIs()
+    private async Task GetISPAddressFromBackupAPIs(bool heartBeatCheck)
     {
         if (ISPAdressChecks is null) ISPAdressChecks = new();
         ISPAdressChecks.Clear();
+
+        _counterService.AddExternalServiceCheckCounter();
 
         foreach (string? APIUrl in _applicationSettingsOptions?.BackupAPIS!)
         {
@@ -176,7 +205,7 @@ public class CheckISPAddressService : ICheckISPAddressService
             }
         }
 
-        if (ISPAdressChecks.Count > 0)
+        if (ISPAdressChecks.Count > 0 && !heartBeatCheck)
         {
             // Get the uniwue ISP adresses from the dictionary
             List<string>? uniqueAdresses = ISPAdressChecks?.Values?.Distinct()?.ToList()!;
@@ -197,9 +226,9 @@ public class CheckISPAddressService : ICheckISPAddressService
                 _emailService.SendDifferendISPAdressValuesEmail(ISPAdressChecks!, oldISPAddress, _counterService, interval);
             }
         }
-        else
+        else if(!heartBeatCheck)
         {
             _emailService.SendNoISPAdressReturnedEmail(oldISPAddress, _counterService, interval);
-        }
+        }        
     }
 }

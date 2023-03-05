@@ -103,7 +103,7 @@ namespace CheckISPAdress.Helpers
             return urlConfigError;
         }
 
-        public static ConfigErrorReportModel DefaultSettingsHaveBeenChanged(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
+        public static ConfigErrorReportModel DefaultSettingsCheck(ApplicationSettingsOptions applicationSettingsOptions, ILogger logger)
         {
             ConfigErrorReportModel report = new();
 
@@ -143,6 +143,17 @@ namespace CheckISPAdress.Helpers
                 string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong> EmailSubject </strong> in appsettings is not changed</p>"
                                     + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
+
+                ReportConfigError(errorMessage, logger);
+                report.ErrorMessage = report.ErrorMessage + errorMessage;
+            }
+                        
+            if (applicationSettingsOptions?.HeatbeatEmailIntervalDays == 0)
+            {
+                report.ChecksPassed = false;
+
+                string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
+                                    + $"<p>The <strong> HeatbeatEmailIntervalDays </strong> in appsettings is not set</p>";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessage = report.ErrorMessage + errorMessage;
