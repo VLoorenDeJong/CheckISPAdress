@@ -113,6 +113,7 @@ namespace CheckISPAdress.Services
             string emailBody = $@"<p><strong>This was fun! </strong></p>"
                                  + $"<p>API calls:<strong> {counterService.GetServiceRequestCounter()}</strong></p>"
                                  + $"<p>API call check: <strong>{counterService.GetServiceCheckCounter()}</strong></p>"
+                                 + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                                  + $@"<p>Current ISP: <strong> {currentISPAddress}</strong></p>";
                                     foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPCheckResults!)
                                     {
@@ -195,6 +196,7 @@ namespace CheckISPAdress.Services
                                  + $"<p>A call is made every <strong> {interval} </strong>minutes<p>"
                                  + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions?.DateTimeFormat)} </strong><p>"
                                  + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter()} </strong>(This counter is reset after this E-mail is send)<p>"
+                                 + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                                  + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                                  + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
                                  + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
@@ -272,6 +274,7 @@ namespace CheckISPAdress.Services
 
             string emailBody = $@"<p><strong> {externalISPAddress} </strong> is your new ISP adress</p>"
                               + $"<p>Go to <a href = '{_applicationSettingsOptions?.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
+                              + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                               + $"<p>I wish you a splendid rest of your day!</p>"
                               + $"<p>Your API</p>"
                               + $"<p><strong>Here are some statistics:</strong></p>"
@@ -281,7 +284,6 @@ namespace CheckISPAdress.Services
                               + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter()} </strong><p>"
                               + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                               + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
-                              + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
                               + $"<p>The old ISP adrdess was:<p>"
                               + $"<p>{oldISPAddress}<p>"
                               ;
