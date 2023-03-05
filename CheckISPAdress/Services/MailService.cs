@@ -74,7 +74,7 @@ namespace CheckISPAdress.Services
                     try
                     {
                         // Send the email message
-                        //client.Send(message);
+                        client.Send(message);
                     }
                     catch (System.Net.Mail.SmtpException ex)
                     {

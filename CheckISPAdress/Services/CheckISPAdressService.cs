@@ -53,7 +53,6 @@ public class CheckISPAddressService : ICheckISPAddressService
 
             return Task.CompletedTask;
         }
-
         return Task.FromException(new TaskCanceledException());
     }
 
@@ -70,7 +69,6 @@ public class CheckISPAddressService : ICheckISPAddressService
 
                 newISPAddress = string.Empty;
                 newISPAddress = await response?.Content?.ReadAsStringAsync()!;
-
 
                 // Checking if the counters are still in sync 
                 if (_counterService.GetServiceRequestCounter != _counterService.GetServiceCheckCounter)
@@ -103,7 +101,6 @@ public class CheckISPAddressService : ICheckISPAddressService
                 return;
             }
         }
-
 
         if (!string.Equals(newISPAddress, currentISPAddress, StringComparison.CurrentCultureIgnoreCase))
         {
