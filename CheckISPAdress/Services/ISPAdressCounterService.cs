@@ -1,13 +1,66 @@
 ﻿using CheckISPAdress.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.Metrics;
 
 namespace CheckISPAdress.Services
 {
-
     public class ISPAdressCounterService : IISPAdressCounterService
     {
-        public int ISPEndpointRequests { get; set; }
-        public int ServiceRequestCounter { get; set; } = 0;
-        public int ServiceCheckCounter { get; set; } = 1;
-        public int FailedISPRequestCounter { get; set; } = 0;
+        public ISPAdressCounterService()
+        {
+            ISPEndpointRequests = 0;
+            ServiceRequestCounter = 0;
+            ServiceCheckCounter = 1;
+            FailedISPRequestCounter = 0;
+        }
+
+        private int ISPEndpointRequests;
+        private int ServiceRequestCounter;
+        private int ServiceCheckCounter;
+        private int FailedISPRequestCounter;
+
+        public void AddISPEndpointRequests()
+        {
+            ISPEndpointRequests = ISPEndpointRequests + 1;
+        }
+
+        public int GetISPEndpointRequests()
+        {
+            return ISPEndpointRequests;
+        }
+
+        public void AddServiceRequestCounter()
+        {
+            ServiceRequestCounter++;
+        }
+
+        public int GetServiceRequestCounter()
+        {
+            return ServiceRequestCounter;
+        }
+
+        public void AddServiceCheckCounter()
+        {
+            ServiceCheckCounter++;
+        }
+
+        public int GetServiceCheckCounter()
+        {
+            return ServiceCheckCounter;
+        }
+
+        public void AddFailedISPRequestCounter()
+        {
+            FailedISPRequestCounter++;
+        }
+
+        public int GetFailedISPRequestCounter()
+        {
+            return FailedISPRequestCounter;
+        }
+        public void ResetFailedISPRequestCounter()
+        {
+            FailedISPRequestCounter = 0;
+        }
     }
 }

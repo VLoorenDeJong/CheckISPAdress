@@ -2,9 +2,14 @@
 {
     public interface IISPAdressCounterService
     {
-        int FailedISPRequestCounter { get; set; }
-        int ISPEndpointRequests { get; set; }
-        int ServiceCheckCounter { get; set; }
-        int ServiceRequestCounter { get; set; }
+        void AddFailedISPRequestCounter();
+        void AddISPEndpointRequests();
+        void AddServiceCheckCounter();
+        void AddServiceRequestCounter();
+        int GetFailedISPRequestCounter();
+        int GetISPEndpointRequests();
+        int GetServiceCheckCounter();
+        int GetServiceRequestCounter();
+        void ResetFailedISPRequestCounter();
     }
 }

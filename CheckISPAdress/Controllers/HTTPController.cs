@@ -1,4 +1,5 @@
 ﻿using CheckISPAdress.Interfaces;
+using CheckISPAdress.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -8,12 +9,12 @@ namespace CheckISPAdress.Controllers
     [ApiController]
     public class HTTPController : ControllerBase
     {
-        private readonly IISPAdressCounterService _counterService;
+        private readonly ISPAdressCounterService CounterService;
         private readonly ILogger<HTTPController> _logger;
 
-        public HTTPController(ILogger<HTTPController> logger, IISPAdressCounterService counterService)
+        public HTTPController(ILogger<HTTPController> logger, ISPAdressCounterService counterService)
         {
-            _counterService = counterService;
+            CounterService = counterService;
             _logger = logger;
         }
 
@@ -23,7 +24,7 @@ namespace CheckISPAdress.Controllers
         public ActionResult<string> GetIpAddress()
         {
             _logger.LogInformation("ISP address has been rewuested");
-            _counterService.ISPEndpointRequests++;
+            CounterService.AddISPEndpointRequests();
 
             HttpContext context = HttpContext;
             string? outputString = string.Empty;
