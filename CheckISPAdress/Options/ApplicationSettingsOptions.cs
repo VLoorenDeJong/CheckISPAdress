@@ -1,4 +1,6 @@
-﻿namespace CheckISPAdress.Options
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace CheckISPAdress.Options
 {
     public class ApplicationSettingsOptions
     {
@@ -16,6 +18,8 @@
         public bool UseDefaultCredentials { get; set; }
         public string? UserName { get; set; }
         public string? Password { get; set; }
+        public TimeSpan HeatbeatEmailTimeOfDay { get; set; }
+        public DayOfWeek HeatbeatEmailDayOfWeek { get; set; }
         public bool EnableSsl { get; set; }
 
         public class AppsettingsSections
@@ -34,7 +38,6 @@
             public const string MailServer = "MailServer";
             public const string UserName = "UserName";
             public const string Password = "Pa$$w0rd";
-
         }
     }
 }

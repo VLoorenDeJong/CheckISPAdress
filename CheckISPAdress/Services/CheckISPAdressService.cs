@@ -15,6 +15,7 @@ public class CheckISPAddressService : ICheckISPAddressService
 
     private Timer? checkCounterTimer;
     private Timer? emailTimer;
+    private Timer? HeartbeatemailTimer;
 
     private Dictionary<string, string> ISPAdressChecks = new();
 
@@ -50,6 +51,8 @@ public class CheckISPAddressService : ICheckISPAddressService
 
             emailTimer = new Timer(async (state) => await GetISPAddressAsync(state!), null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
             checkCounterTimer = new Timer(state => { _counterService.AddServiceCheckCounter(); }, null, TimeSpan.FromMinutes(interval), TimeSpan.FromMinutes(interval));
+            //HeartbeatemailTimer = 
+
 
             return Task.CompletedTask;
         }
