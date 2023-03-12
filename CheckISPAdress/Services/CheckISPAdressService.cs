@@ -36,7 +36,13 @@ public class CheckISPAddressService : ICheckISPAddressService
         {
             try
             {
-                _counterService.AddServiceRequestCounter();
+                //Testing code:
+                //throw new HttpRequestException();
+                //throw new Exception();
+                //_counterService.AddExternalServiceCheckCounter();
+                //_counterService.AddServiceRequestCounter();
+
+                _counterService!.AddServiceRequestCounter();
 
                 HttpResponseMessage response = await client.GetAsync(_applicationSettingsOptions?.APIEndpointURL);
                 response.EnsureSuccessStatusCode();
@@ -63,6 +69,7 @@ public class CheckISPAddressService : ICheckISPAddressService
 
                     _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
                     _emailService.SendISPAPIHTTPExceptionEmail(exceptionType.Name, ex.Message);
+                    await GetISPAddressFromBackupAPIs(false);
                 }
                 return;
             }
@@ -104,18 +111,18 @@ public class CheckISPAddressService : ICheckISPAddressService
 
         foreach (string? APIUrl in _applicationSettingsOptions?.BackupAPIS!)
         {
+            // Testing code
+            //int APICallCounter = 1;
             using (var client = new HttpClient())
             {
                 try
                 {
                     // Testing code
+                    //APICallCounter++;
+                    //if (APICallCounter == 2) throw new HttpRequestException();
+                    //APICallCounter++;
                     //throw new HttpRequestException();
                     //throw new Exception();
-                    //requestCounter++;
-                    //int ISPAddress = requestCounter + 1;
-                    //ISPAdressChecks.Add(APIUrl!, ISPAddress.ToString());
-                    //ISPAdressChecks.Clear();
-
 
                     HttpResponseMessage response = await client.GetAsync(APIUrl);
                     response.EnsureSuccessStatusCode();
@@ -129,6 +136,13 @@ public class CheckISPAddressService : ICheckISPAddressService
                     }
 
                     ISPAdressChecks.Add(APIUrl!, ISPAddress);
+
+                    // Testing code            
+                    //ISPAdressChecks.Add("112323", "1236");
+                    //ISPAdressChecks.Add("1dfa23", "132136");
+                    //ISPAdressChecks.Add("213123", "12124asc36");
+                    //ISPAdressChecks.Add("12zcx q343", "12123asd36");
+                    //ISPAdressChecks.Add("1234321yg1q ", "11243rwqr236");
                 }
                 catch (HttpRequestException ex)
                 {

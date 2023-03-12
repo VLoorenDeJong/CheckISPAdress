@@ -58,9 +58,9 @@ namespace CheckISPAdress.Services
 
         public void Dispose()
         {
-            ISPAdressCheckTimer!.Dispose();
-            controlISPAdressCheckTimer!.Dispose();
-            HeartbeatemailTimer!.Dispose();
+            if(ISPAdressCheckTimer is not null) ISPAdressCheckTimer!.Dispose();
+            if (controlISPAdressCheckTimer is not null) controlISPAdressCheckTimer!.Dispose();
+            if (HeartbeatemailTimer is not null) HeartbeatemailTimer!.Dispose();
         }
     }
 }

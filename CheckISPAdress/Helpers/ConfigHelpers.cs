@@ -115,9 +115,7 @@ namespace CheckISPAdress.Helpers
 
                 string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong>APIEndpointURL</strong> in appsettings is not changed</p>"
-                                    + "<p>change the endpoint!</p>"
-                                    + $"<p>The endpoint of this API is:</p>"
-                                    + $"<p><strong>{applicationSettingsOptions?.APIEndpointURL}<strong></p>";
+                                    + "<p>The application can not check your ISP address.</p>";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessage = report.ErrorMessage + errorMessage;
@@ -130,7 +128,7 @@ namespace CheckISPAdress.Helpers
 
                 string errorMessage = $"<p><h5><strong>appsettings:</strong></h5></p>"
                                     + $"<p>The <strong> DNSRecordProviderURL </strong> in appsettings is not changed</p>"
-                                    + "<p>this is for the mail you will recieve when the ISP adress is changed.</p>";
+                                    + "<p>This link will be in your email when your ISP address is changed.</p>";
 
                 ReportConfigError(errorMessage, logger);
                 report.ErrorMessage = report.ErrorMessage + errorMessage;

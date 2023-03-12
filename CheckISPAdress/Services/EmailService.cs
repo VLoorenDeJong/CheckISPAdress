@@ -237,8 +237,7 @@ namespace CheckISPAdress.Services
         {
 
             string message = $"<p>API Did not respond:</p>"
-                            + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"
-                            + $"<p><strong>{APIUrl}</strong></p>"
+                            + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"                           
                             + "<p>exceptionType:</p>"
                             + $"<p><strong>{exceptionType}</strong></p>"
                             + "<p>message:</p>"
@@ -266,7 +265,7 @@ namespace CheckISPAdress.Services
         public void SendISPAdressChangedEmail(string externalISPAddress, string oldISPAddress, IISPAdressCounterService counterService, double interval)
         {
             // hostingProviderText is the link to the hostprovider, id specified is shows the name
-            string hostingProviderText = string.Equals(_applicationSettingsOptions?.DNSRecordHostProviderURL, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase) ? _applicationSettingsOptions?.DNSRecordHostProviderURL! : _applicationSettingsOptions?.DNSRecordHostProviderName!;
+            string hostingProviderText = string.Equals(_applicationSettingsOptions?.DNSRecordHostProviderName, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase)? _applicationSettingsOptions?.DNSRecordHostProviderURL! : _applicationSettingsOptions?.DNSRecordHostProviderName!;
 
             string message = $@"<p><strong> {externalISPAddress} </strong> is your new ISP adress</p>"
                               + $"<p>Go to <a href = '{_applicationSettingsOptions?.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
@@ -321,7 +320,7 @@ namespace CheckISPAdress.Services
         public void SendNoISPAdressReturnedEmail(string oldISPAddress, IISPAdressCounterService counterService, double interval)
         {
 
-            string message = $@"<p>No adresses were returned and no exceptions?!?!</p>"
+            string message = $@"<p>No adresses were returned are there any exceptions?</p>"
                         + "<p><strong>Best of luck solving this one!</strong></p>"
                         + $"<p>I wish you a splendid rest of your day!</p>"
                         + $"<p>Your API</p>" + $"<p><strong>Here are some statistics:</strong></p>"
