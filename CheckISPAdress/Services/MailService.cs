@@ -22,26 +22,7 @@ namespace CheckISPAdress.Services
             _logger = logger;
             _applicationSettingsOptions = applicationSettingsOptions!.Value;
 
-            if (_applicationSettingsOptions is not null)
-            {
-                bool mailConfigured = true;
-                ConfigErrorReportModel report = new();
-
-                mailConfigured = ConfigHelpers.MandatoryConfigurationChecks(_applicationSettingsOptions, _logger);
-                if (mailConfigured) CreateBasicMailMessage();
-                if (mailConfigured) report = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
-
-                if (!(report.ChecksPassed))
-                {
-                    string emailBody = CreateEmail(report?.ErrorMessage!);
-
-                    SendEmail(emailBody, "CheckISPAdress: Appsettings needs more configuration");
-                }
-            }
-            else
-            {
-                throw new ArgumentException();
-            }
+            CreateBasicMailMessage();
         }
 
         private void CreateBasicMailMessage()
@@ -52,7 +33,24 @@ namespace CheckISPAdress.Services
             message.Priority = MailPriority.High;
         }
 
-        public void SendEmail(string emailBody, string subject)
+        private string CreateEmail(string emailMessage)
+        {
+            string outputMessage = "<html>"
+                                     + "<head>"
+                                        + "<style>"
+                                             + "h1, h3, h4, h5, p { color: #666; font-family: Segoe UI; }"
+                                             + "p { color: #666; font-family: Segoe UI; }"
+                                         + "</style>"
+                                     + "</head>"
+                                     + "<body>"
+                                     + $"{emailMessage}"
+                                     + "</body>"
+                                 + "</html>";
+
+            return outputMessage;
+        }
+
+        private void SendEmail(string emailBody, string subject)
         {
             if (_applicationSettingsOptions is not null)
             {
@@ -92,25 +90,9 @@ namespace CheckISPAdress.Services
             }
         }
 
-        public string CreateEmail(string emailMessage)
-        {
-            string outputMessage = "<html>"
-                                     + "<head>"
-                                        + "<style>"
-                                             + "h1, h3, h4, h5, p { color: #666; font-family: Segoe UI; }"
-                                             + "p { color: #666; font-family: Segoe UI; }"
-                                         + "</style>"
-                                     + "</head>"
-                                     + "<body>"
-                                     + $"{emailMessage}"
-                                     + "</body>"
-                                 + "</html>";
-
-            return outputMessage;
-        }
         public void SendHeartBeatEmail(IISPAdressCounterService counterService, string oldISPAddress, string currentISPAddress, string newISPAddress, Dictionary<string, string> externalISPCheckResults)
         {
-            string emailBody = $@"<p><strong>This was fun! </strong></p>"
+            string message = $@"<p><strong>This was fun! </strong></p>"
                                  + $"<p>API calls:<strong> {counterService.GetServiceRequestCounter()}</strong></p>"
                                  + $"<p>API call check: <strong>{counterService.GetServiceCheckCounter()}</strong></p>"
                                  + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
@@ -118,30 +100,33 @@ namespace CheckISPAdress.Services
                                     foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPCheckResults!)
                                     {
                                         string ispReport = $"<p>{ISPAdressCheck.Key} - <strong>{ISPAdressCheck.Value}</strong></p>";
-                                        emailBody = $"{emailBody} {ispReport}";
+                                        message = $"{message} {ispReport}";
                                     }
-                       emailBody = $"{emailBody} <p>TimeIntervalInMinutes: <strong>{_applicationSettingsOptions?.TimeIntervalInMinutes}</strong></p>"
+                       message = $"{message} <p>TimeIntervalInMinutes: <strong>{_applicationSettingsOptions?.TimeIntervalInMinutes}</strong></p>"
                                  + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
                                  + $@"<p>Old ISP: <strong> {oldISPAddress}</strong></p>"
                                  + $@"<p>New ISP: <strong> {newISPAddress}</strong></p>"
                                  +$"<p>See you in {_applicationSettingsOptions?.HeatbeatEmailIntervalDays} days ;)</p>";
 
+            string emailBody = CreateEmail(message);
 
             SendEmail(emailBody, "ISP address checker update");
         }
 
         public void SendCounterDifferenceEmail(IISPAdressCounterService counterService)
         {
-            string emailBody = $"<p>The ISP check counters are out of sync.</p>"
+            string message = $"<p>The ISP check counters are out of sync.</p>"
                               + $"<p>requestCounter : <strong>{counterService.GetServiceRequestCounter()}</strong></p>"
                               + $"<p>checkCounter : <strong>{counterService.GetServiceCheckCounter()}</strong></p>";
+
+            string emailBody = CreateEmail(message);
 
             SendEmail(emailBody, "CheckISPAddress: counter difference");
         }
 
         public void SendConfigSuccessMail(string newISPAddress, IISPAdressCounterService counterService, double interval)
         {
-            string emailBody = $@"<p>You have succesfully configured this application.</p>"
+            string message = $@"<p>You have succesfully configured this application.</p>"
                                   + "<p><strong>This was fun! </strong></p>"
                                   + $"<p>I wish you a splendid rest of your day!</p>"
                                   + $@"<p><strong> {newISPAddress} </strong> is your ISP adress</p>"
@@ -168,12 +153,12 @@ namespace CheckISPAdress.Services
             {
                 foreach (string? backupAPI in _applicationSettingsOptions?.BackupAPIS!)
                 {
-                    emailBody = $"{emailBody} " +
+                    message = $"{message} " +
                                 $"<p>Backup API {_applicationSettingsOptions?.BackupAPIS.IndexOf(backupAPI)} : <strong>{backupAPI}</strong></p>";
                 }
             }
             // Finish the email body.
-            emailBody = $"{emailBody} "
+            message = $"{message} "
                        + $"<p>The time of this check: <strong> {DateTime.Now.ToString(_applicationSettingsOptions?.DateTimeFormat)} </strong><p>"
                        + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                        + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
@@ -181,12 +166,14 @@ namespace CheckISPAdress.Services
                        + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
                        + $"<p>A call is made every <strong> {interval} </strong>minutes<p>";
 
+            string emailBody = CreateEmail(message);
+
             SendEmail(emailBody, "ISPAdressChecker: Congratulations configuration succes!!");
         }
 
         public void SendConnectionReestablishedEmail(string newISPAddress, string oldISPAddress, IISPAdressCounterService counterService, double interval)
         {
-            string emailBody = $@"<p>ISP adress has changed and I found my self again.</p>"
+            string message = $@"<p>ISP adress has changed and I found my self again.</p>"
                                  + $@"<p><strong> {newISPAddress} </strong> is your new ISP adress</p>"
                                  + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
                                  + "<p><strong>This is fun, hope it goes this well next time! </strong></p>"
@@ -203,10 +190,12 @@ namespace CheckISPAdress.Services
                                  + $"<p>The old ISP adrdess was: {oldISPAddress}<p>"
                                  + $"<p>API endpoint URL: <strong><a href{_applicationSettingsOptions?.APIEndpointURL}</strong></p>";
 
+            string emailBody = CreateEmail(message);
+
             SendEmail(emailBody, "ISPAdressChecker: ISP adress changed but I found my seld");
         }
 
-        public void SenISPAPIHTTPExceptionEmail(string exceptionType, string exceptionMessage)
+        public void SendISPAPIHTTPExceptionEmail(string exceptionType, string exceptionMessage)
         {
             string message = $"<p>API Did not respond:</p>"
                            + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
@@ -220,7 +209,7 @@ namespace CheckISPAdress.Services
             SendEmail(emailBody, "CheckISPAddress: API endpoint HTTP exception");
         }
 
-        public void SendISPAPIEceptionEmail(string exceptionType, string exceptionMessage)
+        public void SendISPAPIExceptionEmail(string exceptionType, string exceptionMessage)
         {
             _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, exceptionMessage);
 
@@ -233,8 +222,6 @@ namespace CheckISPAdress.Services
 
             string emailBody = CreateEmail(message);
 
-
-
             SendEmail(emailBody, "CheckISPAddress: API Call error");
         }
 
@@ -242,6 +229,7 @@ namespace CheckISPAdress.Services
         {
 
             string message =  $"<p>API Did not respond:</p>"
+                            + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"
                             + $"<p><strong>{APIUrl}</strong></p>"
                             +  "<p>exceptionType:</p>"
                             + $"<p><strong>{exceptionType}</strong></p>"
@@ -256,7 +244,7 @@ namespace CheckISPAdress.Services
         public void SendExternalAPIExceptionEmail(string APIUrl, string exceptionType, string exceptionMessage)
         {
             string message = $"<p>Exception fetching ISP address from API:</p>"
-                           + $"<p><strong>{APIUrl}</strong></p>"
+                            + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"
                            +  "<p>exceptionType:"
                            + $"<p><strong>{exceptionType}</strong></p>"
                            +  "<p>message:"
@@ -272,7 +260,7 @@ namespace CheckISPAdress.Services
             // hostingProviderText is the link to the hostprovider, id specified is shows the name
             string hostingProviderText = string.Equals(_applicationSettingsOptions?.DNSRecordHostProviderURL, StandardAppsettingsValues.DNSRecordHostProviderName, StringComparison.CurrentCultureIgnoreCase) ? _applicationSettingsOptions?.DNSRecordHostProviderURL! : _applicationSettingsOptions?.DNSRecordHostProviderName!;
 
-            string emailBody = $@"<p><strong> {externalISPAddress} </strong> is your new ISP adress</p>"
+            string message = $@"<p><strong> {externalISPAddress} </strong> is your new ISP adress</p>"
                               + $"<p>Go to <a href = '{_applicationSettingsOptions?.DNSRecordHostProviderURL}'> <strong>{hostingProviderText}</strong> </a> to update the DNS record.</p>"
                               + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                               + $"<p>I wish you a splendid rest of your day!</p>"
@@ -288,20 +276,22 @@ namespace CheckISPAdress.Services
                               + $"<p>{oldISPAddress}<p>"
                               ;
 
+            string emailBody = CreateEmail(message);
+
             SendEmail(emailBody, _applicationSettingsOptions?.EmailSubject!);
         }
 
         public void SendDifferendISPAdressValuesEmail(Dictionary<string, string> externalISPAdressChecks, string oldISPAddress, IISPAdressCounterService counterService, double interval)
         {
-            string emailBody = $@"<p><strong> Multiple </strong> ISP adresses returned</p>";
+            string message = $@"<p><strong> Multiple </strong> ISP adresses returned</p>";
 
             foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPAdressChecks!)
             {
                 string ispReport = $"<p>{ISPAdressCheck.Key} - <strong>{ISPAdressCheck.Value}</strong></p>";
-                emailBody = $"{emailBody} {ispReport}";
+                message = $"{message} {ispReport}";
             }
 
-            emailBody = $"{emailBody}"
+            message = $"{message}"
                         + "<p><strong>Best of luck solving this one!</strong></p>"
                         + $"<p>I wish you a splendid rest of your day!</p>"
                         + $"<p>Your API</p>" + $"<p><strong>Here are some statistics:</strong></p>"
@@ -314,13 +304,15 @@ namespace CheckISPAdress.Services
                         + $"<p>The old ISP adrdess was:<p>"
                         + $"<p>{oldISPAddress}<p>";
 
+            string emailBody = CreateEmail(message);
+
             SendEmail(emailBody, "ISPAdressChecker: multiple ISP adresses were returned");
         }
 
         public void SendNoISPAdressReturnedEmail(string oldISPAddress, IISPAdressCounterService counterService, double interval)
         {
 
-            string emailBody = $@"<p>No adresses were returned and no exceptions?!?!</p>"
+            string message = $@"<p>No adresses were returned and no exceptions?!?!</p>"
                         + "<p><strong>Best of luck solving this one!</strong></p>"
                         + $"<p>I wish you a splendid rest of your day!</p>"
                         + $"<p>Your API</p>" + $"<p><strong>Here are some statistics:</strong></p>"
@@ -332,6 +324,8 @@ namespace CheckISPAdress.Services
                         + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
                         + $"<p>The old ISP adrdess was:<p>"
                         + $"<p>{oldISPAddress}<p>";
+
+            string emailBody = CreateEmail(message);
 
             SendEmail(emailBody, "ISPAdressChecker: No ISP adresses were returned");
         }

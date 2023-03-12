@@ -1,6 +1,6 @@
-﻿using CheckISPAdress.Services;
-
-public interface ICheckISPAddressService
+﻿public interface ICheckISPAddressService
 {
-    Task StartISPCheckTimers(CancellationToken cancellationToken);
+    Task GetISPAddressAsync();
+    Task GetISPAddressFromBackupAPIs(bool heartBeatCheck);
+    Task HeartBeatCheck();
 }

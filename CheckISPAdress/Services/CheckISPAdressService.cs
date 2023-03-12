@@ -1,10 +1,7 @@
-﻿using CheckISPAdress.Helpers;
-using CheckISPAdress.Interfaces;
-using CheckISPAdress.Models;
+﻿using CheckISPAdress.Interfaces;
 using CheckISPAdress.Options;
 using Microsoft.Extensions.Options;
 using System.Text.RegularExpressions;
-using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
 public class CheckISPAddressService : ICheckISPAddressService
 {
@@ -13,18 +10,12 @@ public class CheckISPAddressService : ICheckISPAddressService
     private readonly IMailService _emailService;
     private readonly ILogger _logger;
 
-    private Timer? checkCounterTimer;
-    private Timer? emailTimer;
-    private Timer? HeartbeatemailTimer;
-
     private Dictionary<string, string> ISPAdressChecks = new();
 
     private string currentISPAddress;
     private string newISPAddress;
     private string oldISPAddress;
     private string ExternalISPAddress;
-
-    private double interval;
 
     public CheckISPAddressService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions, IMailService emailService, IISPAdressCounterService counterService)
     {
@@ -39,53 +30,14 @@ public class CheckISPAddressService : ICheckISPAddressService
         ExternalISPAddress = string.Empty;
     }
 
-    public Task StartISPCheckTimers(CancellationToken cancellationToken)
-    {
-        ConfigErrorReportModel report = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
-
-        if (report.ChecksPassed)
-        {
-            _logger.LogInformation("CheckISPAddress Service running.");
-
-            interval = (_applicationSettingsOptions.TimeIntervalInMinutes == 0) ? 60 : _applicationSettingsOptions.TimeIntervalInMinutes;
-
-            emailTimer = new Timer(async (state) => await GetISPAddressAsync(state!), null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
-            checkCounterTimer = new Timer(state => { _counterService.AddServiceCheckCounter(); }, null, TimeSpan.FromMinutes(interval), TimeSpan.FromMinutes(interval));
-            SetupHeartbeatTimer();
-
-
-            return Task.CompletedTask;
-        }
-        return Task.FromException(new TaskCanceledException());
-    }
-
-    private void SetupHeartbeatTimer()
-    {
-        DateTime now = DateTime.Now;
-        DateTime nextOccurrence = now.AddDays(((int)_applicationSettingsOptions.HeatbeatEmailDayOfWeek - (int)now.DayOfWeek + 7) % 7).Date.Add(_applicationSettingsOptions.HeatbeatEmailTimeOfDay);
-
-        if (nextOccurrence < now)
-        {
-            nextOccurrence = nextOccurrence.AddDays(_applicationSettingsOptions.HeatbeatEmailIntervalDays);
-        }
-
-        TimeSpan heartBeatInterval = TimeSpan.FromDays(_applicationSettingsOptions.HeatbeatEmailIntervalDays);
-
-        HeartbeatemailTimer = new Timer(async (state) =>
-        {
-            // Do something here when the timer elapses, such as calling an async method
-            await HeartBeatCheck();
-        }, null, (int)(nextOccurrence - now).TotalMilliseconds, (int)heartBeatInterval.TotalMilliseconds);
-    }
-
-    private async Task HeartBeatCheck()
+    public async Task HeartBeatCheck()
     {
         await GetISPAddressFromBackupAPIs(true);
         _emailService.SendHeartBeatEmail(_counterService, oldISPAddress, currentISPAddress, newISPAddress, ISPAdressChecks);
         ISPAdressChecks.Clear();
     }
 
-    private async Task GetISPAddressAsync(object state)
+    public async Task GetISPAddressAsync()
     {
         using (var client = new HttpClient())
         {
@@ -109,7 +61,7 @@ public class CheckISPAddressService : ICheckISPAddressService
             {
                 if (ex.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
                 {
-                   _counterService.AddFailedISPRequestCounter();
+                    _counterService.AddFailedISPRequestCounter();
                     await GetISPAddressFromBackupAPIs(false);
                 }
                 else
@@ -117,7 +69,7 @@ public class CheckISPAddressService : ICheckISPAddressService
                     Type exceptionType = ex.GetType();
 
                     _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                    _emailService.SenISPAPIHTTPExceptionEmail(exceptionType.Name, ex.Message);
+                    _emailService.SendISPAPIHTTPExceptionEmail(exceptionType.Name, ex.Message);
                 }
                 return;
             }
@@ -126,7 +78,7 @@ public class CheckISPAddressService : ICheckISPAddressService
                 Type exceptionType = ex.GetType();
 
                 _logger.LogError("API Call error. Exceptiontype: {type} Message:{message}", exceptionType, ex.Message);
-                _emailService.SendISPAPIEceptionEmail(exceptionType.Name, ex.Message);
+                _emailService.SendISPAPIExceptionEmail(exceptionType.Name, ex.Message);
                 return;
             }
         }
@@ -140,18 +92,18 @@ public class CheckISPAddressService : ICheckISPAddressService
 
             if (_counterService.GetServiceRequestCounter() == 1 && _counterService.GetFailedISPRequestCounter() == 0)
             {
-                _emailService.SendConfigSuccessMail(newISPAddress, _counterService, interval);
+                _emailService.SendConfigSuccessMail(newISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
                 await HeartBeatCheck();
             }
             else
             {
-                _emailService.SendConnectionReestablishedEmail(newISPAddress, oldISPAddress, _counterService, interval);
+                _emailService.SendConnectionReestablishedEmail(newISPAddress, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
                 _counterService.ResetFailedISPRequestCounter();
             }
         }
     }
 
-    private async Task GetISPAddressFromBackupAPIs(bool heartBeatCheck)
+    public async Task GetISPAddressFromBackupAPIs(bool heartBeatCheck)
     {
         if (ISPAdressChecks is null) ISPAdressChecks = new();
         ISPAdressChecks.Clear();
@@ -209,7 +161,7 @@ public class CheckISPAddressService : ICheckISPAddressService
         {
             // Get the uniwue ISP adresses from the dictionary
             List<string>? uniqueAdresses = ISPAdressChecks?.Values?.Distinct()?.ToList()!;
-            
+
 
             if (uniqueAdresses.Count == 1)
             {
@@ -219,16 +171,16 @@ public class CheckISPAddressService : ICheckISPAddressService
                 oldISPAddress = currentISPAddress;
                 currentISPAddress = string.Empty;
 
-                _emailService.SendISPAdressChangedEmail(ExternalISPAddress, oldISPAddress, _counterService, interval);
+                _emailService.SendISPAdressChangedEmail(ExternalISPAddress, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
             }
             else
             {
-                _emailService.SendDifferendISPAdressValuesEmail(ISPAdressChecks!, oldISPAddress, _counterService, interval);
+                _emailService.SendDifferendISPAdressValuesEmail(ISPAdressChecks!, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
             }
         }
-        else if(!heartBeatCheck)
+        else if (!heartBeatCheck)
         {
-            _emailService.SendNoISPAdressReturnedEmail(oldISPAddress, _counterService, interval);
-        }        
+            _emailService.SendNoISPAdressReturnedEmail(oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
+        }
     }
 }
