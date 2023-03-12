@@ -9,7 +9,7 @@ using static CheckISPAdress.Options.ApplicationSettingsOptions;
 
 namespace CheckISPAdress.Services
 {
-    public class MailService : IMailService
+    public class EmailService : IEmailService
 
     {
         private readonly ILogger _logger;
@@ -17,7 +17,7 @@ namespace CheckISPAdress.Services
 
         private MailMessage message = new MailMessage();
 
-        public MailService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions)
+        public EmailService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions)
         {
             _logger = logger;
             _applicationSettingsOptions = applicationSettingsOptions!.Value;
@@ -95,18 +95,20 @@ namespace CheckISPAdress.Services
             string message = $@"<p><strong>This was fun! </strong></p>"
                                  + $"<p>API calls:<strong> {counterService.GetServiceRequestCounter()}</strong></p>"
                                  + $"<p>API call check: <strong>{counterService.GetServiceCheckCounter()}</strong></p>"
+                                 + $"<p>Internal API calls: <strong>{counterService.GetInternalAPICallsCounter()}</strong></p>"
                                  + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                                  + $@"<p>Current ISP: <strong> {currentISPAddress}</strong></p>";
-                                    foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPCheckResults!)
-                                    {
-                                        string ispReport = $"<p>{ISPAdressCheck.Key} - <strong>{ISPAdressCheck.Value}</strong></p>";
-                                        message = $"{message} {ispReport}";
-                                    }
-                       message = $"{message} <p>TimeIntervalInMinutes: <strong>{_applicationSettingsOptions?.TimeIntervalInMinutes}</strong></p>"
-                                 + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
-                                 + $@"<p>Old ISP: <strong> {oldISPAddress}</strong></p>"
-                                 + $@"<p>New ISP: <strong> {newISPAddress}</strong></p>"
-                                 +$"<p>See you in {_applicationSettingsOptions?.HeatbeatEmailIntervalDays} days ;)</p>";
+            foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPCheckResults!)
+            {
+                
+                string ispReport = $"<p>Backup API: <a href = '{ISPAdressCheck.Key}'> {ISPAdressCheck.Key} </a> -> <strong>{ISPAdressCheck.Value}</strong></p>";
+                message = $"{message} {ispReport}";
+            }
+            message = $"{message} <p>TimeIntervalInMinutes: <strong>{_applicationSettingsOptions?.TimeIntervalInMinutes}</strong></p>"
+                      + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
+                      + $@"<p>Old ISP: <strong> {oldISPAddress}</strong></p>"
+                      + $@"<p>New ISP: <strong> {newISPAddress}</strong></p>"
+                      + $"<p>See you in {_applicationSettingsOptions?.HeatbeatEmailIntervalDays} days ;)</p>";
 
             string emailBody = CreateEmail(message);
 
@@ -124,12 +126,18 @@ namespace CheckISPAdress.Services
             SendEmail(emailBody, "CheckISPAddress: counter difference");
         }
 
-        public void SendConfigSuccessMail(string newISPAddress, IISPAdressCounterService counterService, double interval)
+        public void SendConfigErrorMail(string errorMessage)
+        {
+            string emailBody = CreateEmail(errorMessage);
+
+            SendEmail(emailBody, "CheckISPAddress: configuration error");
+        }
+
+        public void SendConfigSuccessMail(IISPAdressCounterService counterService)
         {
             string message = $@"<p>You have succesfully configured this application.</p>"
                                   + "<p><strong>This was fun! </strong></p>"
                                   + $"<p>I wish you a splendid rest of your day!</p>"
-                                  + $@"<p><strong> {newISPAddress} </strong> is your ISP adress</p>"
                                   + $@"<br />"
                                   + $@"<br />"
                                   + $"<p><strong>The folowing things were configured:</strong></p>"
@@ -154,7 +162,7 @@ namespace CheckISPAdress.Services
                 foreach (string? backupAPI in _applicationSettingsOptions?.BackupAPIS!)
                 {
                     message = $"{message} " +
-                                $"<p>Backup API {_applicationSettingsOptions?.BackupAPIS.IndexOf(backupAPI)} : <strong>{backupAPI}</strong></p>";
+                                $"<p>Backup API {_applicationSettingsOptions?.BackupAPIS.IndexOf(backupAPI)} : <a href = '{backupAPI}'> <strong>{backupAPI}</strong> </a></p>";
                 }
             }
             // Finish the email body.
@@ -163,8 +171,8 @@ namespace CheckISPAdress.Services
                        + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                        + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
                        + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter()} </strong><p>"
-                       + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
-                       + $"<p>A call is made every <strong> {interval} </strong>minutes<p>";
+                       + $"<p>Endpoint calls: <strong> {counterService.GetInternalAPICallsCounter()} </strong><p>"
+                       + $"<p>A call is made every <strong> {_applicationSettingsOptions!.TimeIntervalInMinutes} </strong>minutes<p>";
 
             string emailBody = CreateEmail(message);
 
@@ -186,7 +194,7 @@ namespace CheckISPAdress.Services
                                  + $"<p>External API calls: <strong>{counterService.GetExternalServiceCheckCounter()}</strong></p>"
                                  + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                                  + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
-                                 + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
+                                 + $"<p>Endpoint calls: <strong> {counterService.GetInternalAPICallsCounter()} </strong><p>"
                                  + $"<p>The old ISP adrdess was: {oldISPAddress}<p>"
                                  + $"<p>API endpoint URL: <strong><a href{_applicationSettingsOptions?.APIEndpointURL}</strong></p>";
 
@@ -199,9 +207,9 @@ namespace CheckISPAdress.Services
         {
             string message = $"<p>API Did not respond:</p>"
                            + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
-                           +  "<p>exceptionType:</p>"
+                           + "<p>exceptionType:</p>"
                            + $"<p><strong>{exceptionType}</strong></p>"
-                           +  "<p>message:</p>"
+                           + "<p>message:</p>"
                            + $"<p><strong>{exceptionMessage}<strong></p>";
 
             string emailBody = CreateEmail(message);
@@ -215,9 +223,9 @@ namespace CheckISPAdress.Services
 
             string message = $"<p>Exception fetching ISP address from API:</p>"
                            + $"<p>API endpoint URL:<a href = '{_applicationSettingsOptions?.APIEndpointURL}'> <strong>{_applicationSettingsOptions?.APIEndpointURL}</strong></a></p>"
-                           +  "<p>exceptionType:"
+                           + "<p>exceptionType:"
                            + $"<p><strong>{exceptionType}</strong></p>"
-                           +  "<p>message:"
+                           + "<p>message:"
                            + $"<p><strong>{exceptionMessage}<strong></p>";
 
             string emailBody = CreateEmail(message);
@@ -228,12 +236,12 @@ namespace CheckISPAdress.Services
         public void SendExternalAPIHTTPExceptionEmail(string APIUrl, string exceptionType, string exceptionMessage)
         {
 
-            string message =  $"<p>API Did not respond:</p>"
+            string message = $"<p>API Did not respond:</p>"
                             + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"
                             + $"<p><strong>{APIUrl}</strong></p>"
-                            +  "<p>exceptionType:</p>"
+                            + "<p>exceptionType:</p>"
                             + $"<p><strong>{exceptionType}</strong></p>"
-                            +  "<p>message:</p>"
+                            + "<p>message:</p>"
                             + $"<p><strong>{exceptionMessage}<strong></p>";
 
             string emailBody = CreateEmail(message);
@@ -245,9 +253,9 @@ namespace CheckISPAdress.Services
         {
             string message = $"<p>Exception fetching ISP address from API:</p>"
                             + $"<p><a href = '{APIUrl}'> <strong>{APIUrl}</strong> </a> </p>"
-                           +  "<p>exceptionType:"
+                           + "<p>exceptionType:"
                            + $"<p><strong>{exceptionType}</strong></p>"
-                           +  "<p>message:"
+                           + "<p>message:"
                            + $"<p><strong>{exceptionMessage}<strong></p>";
 
             string emailBody = CreateEmail(message);
@@ -272,6 +280,7 @@ namespace CheckISPAdress.Services
                               + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter()} </strong><p>"
                               + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                               + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
+                              + $"<p>Endpoint calls: <strong> {counterService.GetInternalAPICallsCounter()} </strong><p>"
                               + $"<p>The old ISP adrdess was:<p>"
                               + $"<p>{oldISPAddress}<p>"
                               ;
@@ -287,7 +296,7 @@ namespace CheckISPAdress.Services
 
             foreach (KeyValuePair<string, string> ISPAdressCheck in externalISPAdressChecks!)
             {
-                string ispReport = $"<p>{ISPAdressCheck.Key} - <strong>{ISPAdressCheck.Value}</strong></p>";
+                string ispReport = $"<p><a href = '{ISPAdressCheck.Key}'>{ISPAdressCheck.Key}</a> - <strong>{ISPAdressCheck.Value}</strong></p>";
                 message = $"{message} {ispReport}";
             }
 
@@ -300,7 +309,7 @@ namespace CheckISPAdress.Services
                         + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter} </strong><p>"
                         + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                         + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
-                        + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
+                        + $"<p>Endpoint calls: <strong> {counterService.GetInternalAPICallsCounter()} </strong><p>"
                         + $"<p>The old ISP adrdess was:<p>"
                         + $"<p>{oldISPAddress}<p>";
 
@@ -321,7 +330,7 @@ namespace CheckISPAdress.Services
                         + $"<p>Failed attempts counter: <strong> {counterService.GetFailedISPRequestCounter()} </strong><p>"
                         + $"<p>API Calls: <strong> {counterService.GetServiceRequestCounter()} </strong><p>"
                         + $"<p>Script runs: <strong> {counterService.GetServiceCheckCounter()} </strong><p>"
-                        + $"<p>Endpoint calls: <strong> {counterService.GetISPEndpointRequests()} </strong><p>"
+                        + $"<p>Endpoint calls: <strong> {counterService.GetInternalAPICallsCounter()} </strong><p>"
                         + $"<p>The old ISP adrdess was:<p>"
                         + $"<p>{oldISPAddress}<p>";
 

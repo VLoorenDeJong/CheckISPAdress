@@ -26,8 +26,6 @@ namespace CheckISPAdress.Services
             _applicationSettingsOptions = applicationSettingsOptions?.Value!;
             _counterService = counterService;
             _ISPAdressService = ISPAdressService;
-
-            //StartISPCheckTimers();
         }
 
         public void StartISPCheckTimers()

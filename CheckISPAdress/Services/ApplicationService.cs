@@ -3,6 +3,7 @@ using CheckISPAdress.Options;
 using Microsoft.Extensions.Options;
 using CheckISPAdress.Helpers;
 using CheckISPAdress.Models;
+using System.Runtime.CompilerServices;
 
 namespace CheckISPAdress.Services
 {
@@ -10,75 +11,80 @@ namespace CheckISPAdress.Services
     {
         private readonly ApplicationSettingsOptions _applicationSettingsOptions;
         private readonly ITimerService _timerService;
-        private readonly IMailService _emailService;
+        private readonly IEmailService _emailService;
+        private readonly IISPAdressCounterService _counterService;
         private readonly ILogger _logger;
 
-        public ApplicationService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions, ITimerService timerService, IMailService emailService)
+        private bool configSuccess = false;
+
+        public ApplicationService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions, ITimerService timerService, IEmailService emailService, IISPAdressCounterService counterService)
         {
             _logger = logger;
             _applicationSettingsOptions = applicationSettingsOptions?.Value!;
             _timerService = timerService;
             _emailService = emailService;
+            _counterService = counterService;
 
-            CheckAppsettings();
+            configSuccess = CheckAppsettings();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            bool mandatorySettingsOk = ConfigHelpers.MandatoryConfigurationChecks(_applicationSettingsOptions, _logger);
-            _logger.LogInformation("mandatorySettingsOk: {mandatorySettingsOk}", mandatorySettingsOk);
-
-            if (mandatorySettingsOk)
+            switch (configSuccess)
             {
-                ConfigErrorReportModel defaultSettingsReport;
-
-                defaultSettingsReport = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
-
-                if (defaultSettingsReport!.ChecksPassed)
-                {
-                    _logger.LogInformation("defaultSettingsReport!.ChecksPassed: {ChecksPassed}", defaultSettingsReport!.ChecksPassed);
+                case true:
+                    _logger.LogInformation("ApplicationService configSuccess: {configSuccess}", configSuccess);
                     _timerService!.StartISPCheckTimers();
-                }
-                else
-                {
-                    _logger.LogInformation("defaultSettingsReport!.ChecksPassed: {ChecksPassed}", defaultSettingsReport!.ChecksPassed);
+                    break;
+                case false:
+                    _logger.LogInformation("ApplicationService configSuccess: {configSuccess}", configSuccess);
                     await StopAsync(default);
-                }
-            }
-            else
-            {
-                await StopAsync(default);
-                throw new Exception("Review appsettings");
-
-            }
+                    break;
+            }           
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await Task.Run(() => _timerService!.Dispose());
         }
-        private void CheckAppsettings()
+        private bool CheckAppsettings()
         {
+            bool appsettingsConfigSuccess = true;
+
             if (_applicationSettingsOptions is not null)
             {
                 bool mailConfigured = true;
                 ConfigErrorReportModel report = new();
 
                 mailConfigured = ConfigHelpers.MandatoryConfigurationChecks(_applicationSettingsOptions, _logger);
-                if (mailConfigured) _emailService.();
-                if (mailConfigured) report = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
 
-                if (!(report.ChecksPassed))
+                switch (mailConfigured)
                 {
-                    string emailBody = CreateEmail(report?.ErrorMessage!);
+                    case false:
+                        appsettingsConfigSuccess = false;
+                        return appsettingsConfigSuccess;
+                    case true:
+                        report = ConfigHelpers.DefaultSettingsCheck(_applicationSettingsOptions, _logger);
+                        break;
+                }
 
-                    SendEmail(emailBody, "CheckISPAdress: Appsettings needs more configuration");
+                switch (report.ChecksPassed)
+                {
+                    case false:
+                        _emailService.SendConfigErrorMail(report.ErrorMessage!);
+                        appsettingsConfigSuccess = false;
+                        return appsettingsConfigSuccess;
+                    case true:
+                        _emailService.SendConfigSuccessMail(_counterService);
+                        break;
                 }
             }
             else
             {
                 throw new ArgumentException();
             }
+
+            return appsettingsConfigSuccess;
         }
     }    
 }

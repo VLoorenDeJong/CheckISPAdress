@@ -1,4 +1,4 @@
-﻿namespace CheckISPAdress.Services
+﻿namespace CheckISPAdress.Interfaces
 {
     public interface IApplicationService
     {

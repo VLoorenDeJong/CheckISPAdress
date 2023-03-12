@@ -26,7 +26,7 @@ namespace CheckISPAdress.Services
             ISPEndpointRequests = ISPEndpointRequests + 1;
         }
 
-        public int GetISPEndpointRequests()
+        public int GetInternalAPICallsCounter()
         {
             return ISPEndpointRequests;
         }

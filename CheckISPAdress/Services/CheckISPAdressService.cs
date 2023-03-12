@@ -1,5 +1,6 @@
 ﻿using CheckISPAdress.Interfaces;
 using CheckISPAdress.Options;
+using CheckISPAdress.Services;
 using Microsoft.Extensions.Options;
 using System.Text.RegularExpressions;
 
@@ -7,33 +8,25 @@ public class CheckISPAddressService : ICheckISPAddressService
 {
     private readonly ApplicationSettingsOptions _applicationSettingsOptions;
     private readonly IISPAdressCounterService _counterService;
-    private readonly IMailService _emailService;
+    private readonly IISPAddressService _ISPAdressService;
+    private readonly IEmailService _emailService;
     private readonly ILogger _logger;
 
     private Dictionary<string, string> ISPAdressChecks = new();
 
-    private string currentISPAddress;
-    private string newISPAddress;
-    private string oldISPAddress;
-    private string ExternalISPAddress;
-
-    public CheckISPAddressService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions, IMailService emailService, IISPAdressCounterService counterService)
+    public CheckISPAddressService(ILogger<CheckISPAddressService> logger, IOptions<ApplicationSettingsOptions> applicationSettingsOptions, IEmailService emailService, IISPAdressCounterService counterService, IISPAddressService ISPAdressService)
     {
         _logger = logger;
         _applicationSettingsOptions = applicationSettingsOptions?.Value!;
         _emailService = emailService;
         _counterService = counterService;
-
-        newISPAddress = string.Empty;
-        currentISPAddress = string.Empty;
-        oldISPAddress = string.Empty;
-        ExternalISPAddress = string.Empty;
+        _ISPAdressService = ISPAdressService;
     }
 
     public async Task HeartBeatCheck()
     {
         await GetISPAddressFromBackupAPIs(true);
-        _emailService.SendHeartBeatEmail(_counterService, oldISPAddress, currentISPAddress, newISPAddress, ISPAdressChecks);
+        _emailService.SendHeartBeatEmail(_counterService, _ISPAdressService.GetOldISPAddress(), _ISPAdressService.GetCurrentISPAddress(), _ISPAdressService.GetNewISPAddress(), ISPAdressChecks);
         ISPAdressChecks.Clear();
     }
 
@@ -48,8 +41,8 @@ public class CheckISPAddressService : ICheckISPAddressService
                 HttpResponseMessage response = await client.GetAsync(_applicationSettingsOptions?.APIEndpointURL);
                 response.EnsureSuccessStatusCode();
 
-                newISPAddress = string.Empty;
-                newISPAddress = await response?.Content?.ReadAsStringAsync()!;
+                _ISPAdressService.ClearNewISPAddress();
+                _ISPAdressService.SetNewISPAddress(await response?.Content?.ReadAsStringAsync()!);
 
                 // Checking if the counters are still in sync 
                 if (_counterService.GetServiceRequestCounter() != _counterService.GetServiceCheckCounter())
@@ -83,21 +76,20 @@ public class CheckISPAddressService : ICheckISPAddressService
             }
         }
 
-        if (!string.Equals(newISPAddress, currentISPAddress, StringComparison.CurrentCultureIgnoreCase))
+        if (!string.Equals(_ISPAdressService.GetNewISPAddress(), _ISPAdressService.GetCurrentISPAddress(), StringComparison.CurrentCultureIgnoreCase))
         {
             // Copy the old ISP adress to that variable
-            oldISPAddress = currentISPAddress;
+            _ISPAdressService.SetOldISPAddress(_ISPAdressService.GetCurrentISPAddress());
             // Make the new ISP address the current address
-            currentISPAddress = newISPAddress;
+            _ISPAdressService.SetCurrentISPAddress(_ISPAdressService.GetNewISPAddress());
 
             if (_counterService.GetServiceRequestCounter() == 1 && _counterService.GetFailedISPRequestCounter() == 0)
             {
-                _emailService.SendConfigSuccessMail(newISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
                 await HeartBeatCheck();
             }
             else
             {
-                _emailService.SendConnectionReestablishedEmail(newISPAddress, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
+                _emailService.SendConnectionReestablishedEmail(_ISPAdressService.GetNewISPAddress(), _ISPAdressService.GetOldISPAddress(), _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
                 _counterService.ResetFailedISPRequestCounter();
             }
         }
@@ -166,21 +158,21 @@ public class CheckISPAddressService : ICheckISPAddressService
             if (uniqueAdresses.Count == 1)
             {
                 // Update new ISP adress
-                ExternalISPAddress = uniqueAdresses[0]!;
+                _ISPAdressService.SetExternalISPAddress(uniqueAdresses[0]!);
                 // Copy the old ISP adress to that variable
-                oldISPAddress = currentISPAddress;
-                currentISPAddress = string.Empty;
+                _ISPAdressService.SetOldISPAddress(_ISPAdressService.GetCurrentISPAddress());
+                _ISPAdressService.ClearCurrentISPAddress();
 
-                _emailService.SendISPAdressChangedEmail(ExternalISPAddress, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
+                _emailService.SendISPAdressChangedEmail(_ISPAdressService.GetExternalISPAddress(), _ISPAdressService.GetOldISPAddress(), _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
             }
             else
             {
-                _emailService.SendDifferendISPAdressValuesEmail(ISPAdressChecks!, oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
+                _emailService.SendDifferendISPAdressValuesEmail(ISPAdressChecks!, _ISPAdressService.GetOldISPAddress(), _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
             }
         }
         else if (!heartBeatCheck)
         {
-            _emailService.SendNoISPAdressReturnedEmail(oldISPAddress, _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
+            _emailService.SendNoISPAdressReturnedEmail(_ISPAdressService.GetOldISPAddress(), _counterService, _applicationSettingsOptions!.TimeIntervalInMinutes);
         }
     }
 }
